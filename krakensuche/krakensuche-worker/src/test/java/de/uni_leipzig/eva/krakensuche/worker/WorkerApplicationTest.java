@@ -1,6 +1,7 @@
 package de.uni_leipzig.eva.krakensuche.worker;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,5 +34,34 @@ class WorkerApplicationTest {
         var args = new String[]{"--help"};
         var map = WorkerApplication.parseArgs(args);
         assertThat(map.get("--help")).isEqualTo("");
+    }
+
+    @Test
+    @Timeout(10)
+    void missingUrlPrintsUsageToStdErrAndExitsWithCodeOne() throws Exception {
+        var javaBin = System.getProperty("java.home") + "/bin/java";
+        var classPath = System.getProperty("java.class.path");
+        var pb = new ProcessBuilder(javaBin, "-cp", classPath,
+                "de.uni_leipzig.eva.krakensuche.worker.WorkerApplication");
+        var process = pb.start();
+        var err = new String(process.getErrorStream().readAllBytes());
+        var exitCode = process.waitFor();
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(err).contains("Usage:");
+    }
+
+    @Test
+    @Timeout(10)
+    void crawlFailurePrintsErrorToStdErrAndExitsWithCodeOne() throws Exception {
+        var javaBin = System.getProperty("java.home") + "/bin/java";
+        var classPath = System.getProperty("java.class.path");
+        var pb = new ProcessBuilder(javaBin, "-cp", classPath,
+                "de.uni_leipzig.eva.krakensuche.worker.WorkerApplication",
+                "--url", "http://localhost:1/nonexistent", "--threads", "1");
+        var process = pb.start();
+        var err = new String(process.getErrorStream().readAllBytes());
+        var exitCode = process.waitFor();
+        assertThat(exitCode).isEqualTo(1);
+        assertThat(err).contains("Error:");
     }
 }
