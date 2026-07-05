@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -90,6 +91,24 @@ class CrawlExecutorTest {
             assertThat(results).hasSize(4);
             assertThat(results).anyMatch(r -> r instanceof CrawlSuccess);
             assertThat(results).anyMatch(r -> r instanceof CrawlFailure);
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    @Test
+    void handlesHighVolumeConcurrentCrawls() {
+        var executor = new CrawlExecutor(4, fetcher, extractor);
+        try {
+            var futures = IntStream.range(0, 100)
+                    .mapToObj(i -> executor.submit("http://success.test"))
+                    .toList();
+            var results = CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                    .thenApply(v -> futures.stream().map(CompletableFuture::join).toList())
+                    .join();
+
+            assertThat(results).hasSize(100);
+            assertThat(results).allMatch(r -> r instanceof CrawlSuccess);
         } finally {
             executor.shutdown();
         }
