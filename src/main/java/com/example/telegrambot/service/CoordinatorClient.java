@@ -27,4 +27,10 @@ public class CoordinatorClient {
         );
         return response.getBody();
     }
+
+    public JobDetail getJobDetail(String jobId) {
+        String url = baseUrl + "/api/jobs/" + jobId;
+        ResponseEntity<JobDetail> response = restTemplate.getForEntity(url, JobDetail.class);
+        return response.getBody();
+    }
 }
