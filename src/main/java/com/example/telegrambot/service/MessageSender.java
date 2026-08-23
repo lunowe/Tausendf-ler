@@ -28,4 +28,18 @@ public class MessageSender {
             e.printStackTrace();
         }
     }
+
+    public void sendReply(Long chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.enableMarkdown(true);
+        try {
+            bot.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
