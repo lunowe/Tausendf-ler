@@ -39,7 +39,7 @@ public class CoordinatorClient {
         return response.getBody();
     }
 
-    // NEU: Neue Ergebnisse seit Zeitstempel abrufen (für Live-Stream)
+    // Neue Ergebnisse seit Zeitstempel abrufen (für Live-Stream)
     public List<PageResult> getNewResults(String jobId, String sinceTimestamp) {
         URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl + "/api/jobs/" + jobId + "/results")
                 .queryParam("since", sinceTimestamp)
@@ -48,5 +48,23 @@ public class CoordinatorClient {
 
         ResponseEntity<PageResult[]> response = restTemplate.getForEntity(uri, PageResult[].class);
         return Arrays.asList(response.getBody());
+    }
+
+    // NEU: Job pausieren
+    public void pauseJob(String jobId) {
+        String url = baseUrl + "/api/jobs/" + jobId + "/pause";
+        restTemplate.postForEntity(url, null, Void.class);
+    }
+
+    // NEU: Job fortsetzen
+    public void resumeJob(String jobId) {
+        String url = baseUrl + "/api/jobs/" + jobId + "/resume";
+        restTemplate.postForEntity(url, null, Void.class);
+    }
+
+    // NEU: Job abbrechen
+    public void abortJob(String jobId) {
+        String url = baseUrl + "/api/jobs/" + jobId + "/abort";
+        restTemplate.postForEntity(url, null, Void.class);
     }
 }
