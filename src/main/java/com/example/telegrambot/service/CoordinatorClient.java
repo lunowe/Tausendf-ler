@@ -50,21 +50,35 @@ public class CoordinatorClient {
         return Arrays.asList(response.getBody());
     }
 
-    // NEU: Job pausieren
+    // Job pausieren
     public void pauseJob(String jobId) {
         String url = baseUrl + "/api/jobs/" + jobId + "/pause";
         restTemplate.postForEntity(url, null, Void.class);
     }
 
-    // NEU: Job fortsetzen
+    // Job fortsetzen
     public void resumeJob(String jobId) {
         String url = baseUrl + "/api/jobs/" + jobId + "/resume";
         restTemplate.postForEntity(url, null, Void.class);
     }
 
-    // NEU: Job abbrechen
+    // Job abbrechen
     public void abortJob(String jobId) {
         String url = baseUrl + "/api/jobs/" + jobId + "/abort";
         restTemplate.postForEntity(url, null, Void.class);
+    }
+
+    // Alle Jobs auflisten
+    public List<JobInfo> listJobs() {
+        String url = baseUrl + "/api/jobs";
+        ResponseEntity<JobInfo[]> response = restTemplate.getForEntity(url, JobInfo[].class);
+        return Arrays.asList(response.getBody());
+    }
+
+    // Statistiken abrufen
+    public Stats getStats() {
+        String url = baseUrl + "/api/stats";
+        ResponseEntity<Stats> response = restTemplate.getForEntity(url, Stats.class);
+        return response.getBody();
     }
 }
