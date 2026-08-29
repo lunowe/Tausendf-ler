@@ -12,23 +12,38 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Accepts a {@code DATABASE_URL} in the form {@code postgres://user:password@host:port/db} (what Railway, Heroku
- * and friends provide) and translates it into the JDBC datasource properties. {@code DB_URL} (JDBC form) still wins
- * if it is set, so local setups are unaffected. Registered in {@code META-INF/spring.factories}.
+ * Accepts {@code DB_URL} or {@code DATABASE_URL} in the form {@code postgres://user:password@host:port/db} (what
+ * Railway, Heroku and friends provide) and translates it into the JDBC datasource properties. A {@code jdbc:} URL is
+ * passed through untouched, so local setups are unaffected. Registered in {@code META-INF/spring.factories}.
  */
 public final class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication application) {
-        String jdbcUrl = env.getProperty("DB_URL");
-        String databaseUrl = env.getProperty("DATABASE_URL");
-        if ((jdbcUrl != null && !jdbcUrl.isBlank()) || databaseUrl == null || databaseUrl.isBlank()) {
+        // DB_URL wins if set; either variable may carry the postgres:// form and is then translated
+        String candidate = firstNonBlank(env.getProperty("DB_URL"), env.getProperty("DATABASE_URL"));
+        if (candidate == null || candidate.trim().startsWith("jdbc:")) {
             return;
         }
-        Map<String, Object> props = toDataSourceProperties(databaseUrl);
+        Map<String, Object> props = toDataSourceProperties(candidate);
         if (!props.isEmpty()) {
+            // explicit DB_USER/DB_PASSWORD still override credentials embedded in the URL
+            if (!isBlank(env.getProperty("DB_USER"))) {
+                props.remove("spring.datasource.username");
+            }
+            if (!isBlank(env.getProperty("DB_PASSWORD"))) {
+                props.remove("spring.datasource.password");
+            }
             env.getPropertySources().addFirst(new MapPropertySource("databaseUrl", props));
         }
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        return !isBlank(a) ? a : (!isBlank(b) ? b : null);
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     /** {@code postgres://u:p@h:5432/db?sslmode=require} → spring.datasource.url/username/password; empty map if unparseable. */

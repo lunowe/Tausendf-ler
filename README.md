@@ -145,7 +145,8 @@ aus dem Repo-Root.
 
    (`DATABASE_URL` im Format `postgres://user:pw@host:port/db` übersetzt der Koordinator selbst in die
    JDBC-Einstellungen – `config/DatabaseUrlEnvironmentPostProcessor`. Alternativ weiterhin `DB_URL`
-   als JDBC-URL plus `DB_USER`/`DB_PASSWORD`; ist `DB_URL` gesetzt, hat es Vorrang.) Unter *Settings → Networking* für den REST-Port 8080 eine
+   als JDBC-URL plus `DB_USER`/`DB_PASSWORD`; ist `DB_URL` gesetzt, hat es Vorrang – auch `DB_URL` darf die
+   `postgres://`-Form haben.) Unter *Settings → Networking* für den REST-Port 8080 eine
    *Public Domain* erzeugen und zusätzlich einen **TCP Proxy auf Port 9090** anlegen; Railway zeigt dann
    `<proxy-host>:<proxy-port>` an – das ist die Adresse für die Worker.
 3. **Bot-Service** aus demselben Repo anlegen, *Dockerfile Path* `bot/Dockerfile`, Variablen:
