@@ -33,6 +33,10 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
   zuletzt gesehenen `seq` – das ist der Live-Stream.
 * Fehler: `404` unbekannter Job, `409` ungültiger Zustandsübergang (z. B. Pause auf beendetem Job),
   `400` ungültige Eingabe. Body `{error: "..."}`.
+* **CORS**: Der Bot ruft die API serverseitig auf und braucht kein CORS. Für das Browser-Frontend
+  (`frontend/`, Next.js) erlaubt der Koordinator `/api/**` für die Origins aus
+  `tausendfuessler.cors-origins` (Standard `http://localhost:3000`, Methoden `GET, POST, OPTIONS`) –
+  siehe `coordinator/.../config/WebCorsConfig`. Andere Origins bekommen `403` auf den Preflight.
 
 ---
 

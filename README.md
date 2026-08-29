@@ -6,6 +6,7 @@ Verteilter Webcrawler, gesteuert über einen Telegram-Bot. Prototyp für das Mod
 ```
 Telegram-API ──HTTP──▶ Bot (Spring Boot, kein Web-Server)
                          │ REST
+Browser ─────────────────┤ REST   (optionales Frontend, Next.js :3000)
                          ▼
                    Koordinator (Spring Boot: REST-API + TCP-Server :9090)
                     ├── Job-Queue, Frontier, URL-Dedup, Least-Work-First-Scheduler
@@ -26,6 +27,7 @@ Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze (aktuell: [docs/Skizze_v3.md]
 | `coordinator` | Spring Boot Web + Data JPA | Nimmt Jobs per REST an, verteilt URLs an Worker, persistiert Ergebnisse |
 | `worker` | Plain Java (kein Spring) | Verbindet sich zum Koordinator, crawlt URL-Pakete parallel |
 | `bot` | Spring Boot + telegrambots | Telegram-Oberfläche: `/crawl`, `/list`, `/status`, `/pause`, `/resume`, `/abort`, `/search`, `/stats` |
+| `frontend` | Next.js 16 + TypeScript + Tailwind | Optionaler Browser-Leitstand auf derselben REST-API (siehe [Frontend](#frontend)) |
 
 ## Voraussetzungen
 
@@ -48,6 +50,30 @@ java -jar bot/target/bot.jar
 ```
 
 Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
+
+## Frontend
+
+Die Skizze nennt einen Browser-Client als mögliche Erweiterung – `frontend/` ist genau das: ein
+Next.js-Leitstand, der ausschließlich die REST-API des Koordinators aus [PROTOCOL.md](PROTOCOL.md) §1
+benutzt, also dieselbe Schnittstelle wie der Telegram-Bot. Kein eigenes Backend, keine zweite
+Datenhaltung; alle Aufrufe passieren im Browser.
+
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:3000, erwartet Koordinator auf :8080
+```
+
+* Seiten: `/` (Statistiken, Formular „Neuer Crawl“, Auftragsliste, Refresh alle 2 s),
+  `/jobs/<id>` (Details, Pause/Fortsetzen/Abbrechen gemäß Zustandsautomat, Live-Stream mit
+  1-s-Polling auf `/results?afterSeq=…`, Abschlussbericht) und `/search` (Volltextsuche mit Debounce).
+* Browser-Aufträge laufen unter `owner = 0`; Telegram nutzt die Chat-ID, beide Welten teilen sich
+  denselben Koordinator und dieselbe Datenbank.
+* Konfiguration: `NEXT_PUBLIC_COORDINATOR_URL` (Standard `http://localhost:8080`), siehe
+  `frontend/.env.example`.
+* Der Koordinator muss die Origin erlauben: `tausendfuessler.cors-origins`
+  (Standard `http://localhost:3000`, Umgebungsvariable `CORS_ORIGINS`).
+* Build/Checks: `npm run build` (inkl. TypeScript) und `npm run lint`.
 
 ## Lasttest
 
@@ -87,4 +113,5 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
 - [x] Lasttest-Client für die nicht-funktionalen Anforderungen (`loadtest`, Ergebnisse in [docs/NFA-Report.md](docs/NFA-Report.md))
 - [x] Livetest über Telegram (2026-08-29): alle Befehle inkl. Live-Stream, Pause/Resume/Abort, Sitemap-Crawl mit 437 Seiten
 - [x] Skizze auf finale Architektur aktualisiert ([docs/Skizze_v3.md](docs/Skizze_v3.md))
-- [ ] Präsentation
+- [x] Browser-Frontend (`frontend/`) auf derselben REST-API, gegen laufenden Koordinator + Worker getestet
+- [x] Präsentations-Baseline ([docs/presentation/Tausendfuessler.pptx](docs/presentation/Tausendfuessler.pptx), generiert aus `build_pptx.py`)

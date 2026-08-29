@@ -1,0 +1,389 @@
+@import "tailwindcss";
+
+/* ==================================================================
+   Tausendfuessler – Leitstand
+   "Institutsblatt": warmes Papier, Haarlinien, Basalt als Schrift-
+   farbe, das Uni-Leipzig-CD (Granat / Karneol / Aquamarin) als
+   einzige Akzente. Kantige Flaechen, keine Verlaeufe, keine Deko.
+   ================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Flaechen */
+  --paper: #faf9f6;
+  --surface: #ffffff;
+  --sunken: #f2f0ec;
+
+  /* Schrift – Basalt und zwei abgeleitete Stufen */
+  --ink: #262a31;
+  --ink-2: #545b66;
+  --ink-3: #6f7681;
+  --ink-4: #a5abb4;
+
+  --rule: rgba(38, 42, 49, 0.16);
+  --rule-soft: rgba(38, 42, 49, 0.08);
+  --rule-faint: rgba(38, 42, 49, 0.035);
+
+  /* Uni-Leipzig-CD */
+  --granat: #b02f2c;
+  --karneol: #d8413e;
+  --aquamarin: #8ac2d1;
+  --aqua-deep: #2c7189;
+
+  --granat-tint: rgba(176, 47, 44, 0.07);
+  --aqua-tint: rgba(138, 194, 209, 0.26);
+
+  --focus: #1f6f88;
+
+  /* Auftragszustaende – gedeckte Skala, alle >= 4.5:1 auf Weiss */
+  --st-PENDING: #646b76;
+  --st-RUNNING: #2c7189;
+  --st-PAUSED: #8a5f22;
+  --st-COMPLETED: #2f7a57;
+  --st-ABORTED: #4e5560;
+  --st-FAILED: #b02f2c;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-granat: var(--granat);
+  --color-karneol: var(--karneol);
+  --color-aquamarin: var(--aquamarin);
+  --color-aqua-deep: var(--aqua-deep);
+
+  --font-display: var(--font-display), Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  border-color: var(--rule);
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: var(--paper);
+  /* Millimeterpapier, gerade noch sichtbar – kein Verlauf, kein Rauschen. */
+  background-image:
+    linear-gradient(var(--rule-faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule-faint) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--aqua-tint);
+  color: var(--ink);
+}
+
+/* --- Fokus: ueberall sichtbar, nie wegoptimiert --------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+/* --- Typografie ---------------------------------------------------- */
+
+.display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.06;
+}
+
+.label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Flaechen ------------------------------------------------------ */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 1px rgba(38, 42, 49, 0.03);
+}
+
+.rule-top {
+  border-top: 1px solid var(--rule);
+}
+
+/* Diagonalschraffur fuer leere Flaechen – wie ein nicht belegtes Feld. */
+.hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--rule-soft) 0 1px,
+    transparent 1px 8px
+  );
+}
+
+/* --- Bedienelemente ------------------------------------------------ */
+
+.field {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8125rem;
+  padding: 0.65rem 0.8rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.field::placeholder {
+  color: var(--ink-4);
+}
+
+.field:hover:not(:focus) {
+  border-color: rgba(38, 42, 49, 0.3);
+}
+
+.field:focus {
+  border-color: var(--aqua-deep);
+  box-shadow: inset 0 0 0 1px var(--aqua-deep);
+  outline: none;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: var(--sunken);
+}
+
+.btn:disabled {
+  color: var(--ink-4);
+  border-color: var(--rule-soft);
+  background: var(--sunken);
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--granat);
+  border-color: var(--granat);
+  color: #fff;
+  font-weight: 500;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--karneol);
+  border-color: var(--karneol);
+  color: #fff;
+}
+
+.btn-primary:disabled {
+  background: var(--sunken);
+  border-color: var(--rule);
+  color: var(--ink-4);
+}
+
+.btn-danger {
+  color: var(--granat);
+  border-color: rgba(176, 47, 44, 0.4);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--granat-tint);
+  border-color: var(--granat);
+  color: var(--granat);
+}
+
+/* Link mit auffahrender Unterstreichung – ersetzt jedes Icon-Gewitter. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size 0.2s ease;
+}
+
+.link-underline:hover,
+.link-underline:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* --- Bewegung: nur dort, wo sie etwas meldet ------------------------ */
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.pulse {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+/* Neu eingetroffenes Segment: kurzes Aufleuchten, keine Verschiebung. */
+@keyframes fresh-wash {
+  from {
+    background-color: var(--aqua-tint);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes fresh-mark {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fresh {
+  animation: fresh-wash 1.2s ease-out both;
+}
+
+.fresh > .fresh-mark {
+  animation: fresh-mark 1.2s ease-out both;
+}
+
+.fade-in {
+  animation: fade-in 0.35s ease-out both;
+}
+
+/* Laufender Balken im aktiven Tiefenfeld. */
+@keyframes sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  background: rgba(255, 255, 255, 0.75);
+  animation: sweep 1.9s linear infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton {
+  background: var(--sunken);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
+/* --- Scrollbar ----------------------------------------------------- */
+
+.scroll-pane {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(38, 42, 49, 0.28) transparent;
+  overscroll-behavior: contain;
+}
+
+.scroll-pane::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-pane::-webkit-scrollbar-thumb {
+  background: rgba(38, 42, 49, 0.22);
+  border: 3px solid var(--surface);
+}
+
+.scroll-pane::-webkit-scrollbar-thumb:hover {
+  background: rgba(38, 42, 49, 0.4);
+}

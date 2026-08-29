@@ -15,6 +15,8 @@ server:
 
 tausendfuessler:
   worker-port: ${COORDINATOR_WORKER_PORT:9090}
+  # Erlaubte Origins des Browser-Frontends (frontend/), kommasepariert
+  cors-origins: ${CORS_ORIGINS:http://localhost:3000}
   result-retention-days: ${RESULT_RETENTION_DAYS:30}
 
 logging:
