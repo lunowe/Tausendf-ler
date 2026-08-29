@@ -1,50 +1,64 @@
 package de.uni_leipzig.eva.tausendfuessler.worker;
 
-import de.uni_leipzig.eva.tausendfuessler.worker.crawler.CrawlSuccess;
-import de.uni_leipzig.eva.tausendfuessler.worker.crawler.CrawlFailure;
-import de.uni_leipzig.eva.tausendfuessler.worker.pool.CrawlExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class WorkerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerApplication.class);
+    static final String USAGE = "Usage: java -jar worker.jar --coordinator <host:port> [--threads <n>] [--id <name>]";
 
     public static void main(String[] args) {
         var parsed = parseArgs(args);
-        var url = parsed.get("--url");
-        if (url == null) {
-            System.err.println("Usage: java -jar worker.jar --url <url> [--threads <n>]");
+        var coordinator = parsed.get("--coordinator");
+        if (coordinator == null || coordinator.isBlank()) {
+            System.err.println(USAGE);
             System.exit(1);
         }
-        var threads = Integer.parseInt(parsed.getOrDefault("--threads", String.valueOf(Runtime.getRuntime().availableProcessors())));
-
-        var executor = new CrawlExecutor(threads);
+        CoordinatorAddress address;
+        int threads;
         try {
-            log.info("crawling url={} threads={}", url, threads);
-            var outcome = executor.submit(url).join();
-
-            switch (outcome) {
-                case CrawlSuccess s -> {
-                    System.out.println("URL: " + s.url());
-                    System.out.println("Status: " + s.httpStatus());
-                    System.out.println("Title: " + (s.title() != null ? s.title() : "(none)"));
-                    System.out.println("Text length: " + s.plainText().length());
-                    System.out.println("Outgoing links: " + s.outgoingLinks().size());
-                    s.outgoingLinks().forEach(link -> System.out.println("  -> " + link));
-                }
-                case CrawlFailure f -> {
-                    System.err.println("URL: " + f.url());
-                    System.err.println("Error: " + f.error());
-                    System.exit(1);
-                }
+            address = parseCoordinator(coordinator);
+            threads = Integer.parseInt(parsed.getOrDefault(
+                    "--threads", String.valueOf(Runtime.getRuntime().availableProcessors())));
+            if (threads < 1) {
+                throw new IllegalArgumentException("threads must be positive");
             }
-        } finally {
-            executor.shutdown();
+        } catch (IllegalArgumentException e) {
+            System.err.println(USAGE);
+            System.exit(1);
+            return;
         }
+
+        var workerId = parsed.getOrDefault("--id", defaultWorkerId());
+        var client = new WorkerClient(address.host(), address.port(), workerId, threads);
+        Runtime.getRuntime().addShutdownHook(new Thread(client::close, "worker-shutdown"));
+        log.info("worker {} starting, coordinator={}:{} threads={}", workerId, address.host(), address.port(), threads);
+        client.run();
+    }
+
+    static CoordinatorAddress parseCoordinator(String value) {
+        int separator = value.lastIndexOf(':');
+        if (separator <= 0 || separator == value.length() - 1) {
+            throw new IllegalArgumentException("coordinator must be host:port");
+        }
+        return new CoordinatorAddress(value.substring(0, separator), Integer.parseInt(value.substring(separator + 1)));
+    }
+
+    static String defaultWorkerId() {
+        String hostname;
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            hostname = "worker";
+        }
+        return hostname + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     static Map<String, String> parseArgs(String[] args) {
@@ -61,4 +75,6 @@ public final class WorkerApplication {
         }
         return map;
     }
+
+    record CoordinatorAddress(String host, int port) {}
 }
