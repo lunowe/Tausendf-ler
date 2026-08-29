@@ -1,1 +1,22 @@
+# Build
+target/
+dependency-reduced-pom.xml
+*.log
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# OS
 .DS_Store
+
+# Local config / secrets
+.env
+*.local.properties
