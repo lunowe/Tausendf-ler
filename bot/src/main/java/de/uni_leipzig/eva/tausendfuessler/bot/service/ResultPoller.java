@@ -9,6 +9,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ResultPoller {
 
     private static final Logger log = LoggerFactory.getLogger(ResultPoller.class);
+    /** Page size of GET /api/jobs/{id}/results (JobService.RESULT_PAGE_SIZE). */
+    static final int RESULT_PAGE_SIZE = 50;
+    private static final int MESSAGE_MAX_LENGTH = 4000;
 
     private final CoordinatorClient coordinatorClient;
     private final MessageSender messageSender;
@@ -50,13 +57,25 @@ public class ResultPoller {
 
     private void pollJob(String jobId, Subscription sub) {
         try {
-            var results = coordinatorClient.getNewResults(jobId, sub.lastSeq);
-            for (PageResult page : results) {
-                messageSender.send(sub.chatId, formatPage(page));
-                sub.lastSeq = Math.max(sub.lastSeq, page.getSeq());
-            }
-
+            // status first: every page persisted before this status was set is then guaranteed to be drained below
             JobDetail detail = coordinatorClient.getJobDetail(jobId);
+
+            List<PageResult> batch;
+            do {
+                batch = coordinatorClient.getNewResults(jobId, sub.lastSeq);
+                if (!batch.isEmpty()) {
+                    for (PageResult page : batch) {
+                        sub.lastSeq = Math.max(sub.lastSeq, page.getSeq());
+                    }
+                    PageResult last = batch.get(batch.size() - 1);
+                    log.info("job {} seq {}..{} delivered, last crawled {} ms ago", jobId,
+                            batch.get(0).getSeq(), last.getSeq(), millisSince(last.getCrawledAt()));
+                    for (String text : batchMessages(batch)) {
+                        messageSender.send(sub.chatId, text);
+                    }
+                }
+            } while (batch.size() >= RESULT_PAGE_SIZE); // the coordinator caps one call at RESULT_PAGE_SIZE rows
+
             if (isTerminal(detail.getStatus())) {
                 messageSender.send(sub.chatId, formatReport(detail));
                 unsubscribe(jobId);
@@ -66,11 +85,41 @@ public class ResultPoller {
         }
     }
 
+    /** Several pages per Telegram message (Telegram rate-limits ~1 msg/s per chat), split at the length limit. */
+    static List<String> batchMessages(List<PageResult> pages) {
+        List<String> messages = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (PageResult page : pages) {
+            String text = formatPage(page);
+            if (current.length() > 0 && current.length() + 2 + text.length() > MESSAGE_MAX_LENGTH) {
+                messages.add(current.toString());
+                current.setLength(0);
+            }
+            if (current.length() > 0) {
+                current.append("\n\n");
+            }
+            current.append(text);
+        }
+        if (current.length() > 0) {
+            messages.add(current.toString());
+        }
+        return messages;
+    }
+
+    /** Live-delivery latency (NFA: < 2 s); -1 if the timestamp is missing or unparseable. */
+    private static long millisSince(String isoInstant) {
+        try {
+            return isoInstant == null ? -1 : System.currentTimeMillis() - Instant.parse(isoInstant).toEpochMilli();
+        } catch (DateTimeParseException e) {
+            return -1;
+        }
+    }
+
     private static boolean isTerminal(JobStatus status) {
         return status == JobStatus.COMPLETED || status == JobStatus.ABORTED || status == JobStatus.FAILED;
     }
 
-    private String formatPage(PageResult page) {
+    private static String formatPage(PageResult page) {
         StringBuilder sb = new StringBuilder("📄 ").append(page.getUrl()).append('\n');
         if (page.getTitle() != null && !page.getTitle().isBlank()) {
             sb.append("📌 ").append(page.getTitle()).append('\n');

@@ -7,6 +7,9 @@ import java.util.Locale;
 /** Canonical form used for deduplication: strip fragment, trim trailing slash, lowercase scheme and host. */
 public final class UrlNormalizer {
 
+    /** Longer URLs are dropped: they would not fit {@code pages.url} (varchar 2048) and are junk in practice. */
+    public static final int MAX_LENGTH = 2048;
+
     private UrlNormalizer() {}
 
     /** @return normalized URL or {@code null} if the input is not an absolute http(s) URL */
@@ -37,7 +40,8 @@ public final class UrlNormalizer {
             if (uri.getRawQuery() != null) {
                 sb.append('?').append(uri.getRawQuery());
             }
-            return sb.toString();
+            String normalized = sb.toString();
+            return normalized.length() > MAX_LENGTH ? null : normalized;
         } catch (URISyntaxException e) {
             return null;
         }

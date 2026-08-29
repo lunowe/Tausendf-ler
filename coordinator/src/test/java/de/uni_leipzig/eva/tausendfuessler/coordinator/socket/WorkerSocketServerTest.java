@@ -178,6 +178,27 @@ class WorkerSocketServerTest {
     }
 
     @Test
+    void failingResultYieldsErrorButKeepsConnectionAndRequeuesNothingElse() throws Exception {
+        JobEntity job = jobService.createJob("https://toolong.example/", 1, List.of(), 8L);
+        try (FakeWorker w = new FakeWorker()) {
+            w.send(new Message.Register("w-toolong", 2));
+            w.receive();
+            Message.WorkPackage pkg = w.requestWorkFor("w-toolong", job.getId());
+
+            // a URL that does not fit pages.url (varchar 2048) -> DB rejects the row, but the connection must survive
+            String tooLong = "https://toolong.example/" + "x".repeat(3000);
+            w.send(new Message.PageResult("w-toolong", job.getId(), tooLong, 0, 200, "t", "s", List.of(), null,
+                    System.currentTimeMillis()));
+            assertThat(w.receive()).isInstanceOf(Message.Error.class);
+
+            w.pageResult("w-toolong", job.getId(), pkg.urls().get(0), 0, List.of("https://toolong.example/" + "y".repeat(3000)));
+            await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                    assertThat(jobService.getDetail(job.getId()).getStatus()).isEqualTo(JobStatus.COMPLETED));
+            assertThat(workers.get("w-toolong")).isPresent();
+        }
+    }
+
+    @Test
     void malformedLineYieldsErrorButKeepsConnection() throws Exception {
         try (FakeWorker w = new FakeWorker()) {
             w.send(new Message.RequestWork("nobody", 1)); // before REGISTER

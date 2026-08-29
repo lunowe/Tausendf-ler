@@ -55,7 +55,9 @@ public final class CrawlExecutor {
             if (fetchResult.httpStatus() < 200 || fetchResult.httpStatus() >= 400) {
                 return new CrawlFailure(url, "HTTP " + fetchResult.httpStatus());
             }
-            var extracted = extractor.extract(url, fetchResult.body());
+            // resolve relative links against the URL the server finally answered on (redirects, trailing slash)
+            String base = fetchResult.finalUrl() == null ? url : fetchResult.finalUrl();
+            var extracted = extractor.extract(base, fetchResult.body());
             return new CrawlSuccess(
                     url,
                     fetchResult.httpStatus(),

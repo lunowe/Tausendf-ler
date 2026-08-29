@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 final class WorkerConnectionHandler implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerConnectionHandler.class);
+    static final int READ_TIMEOUT_MS = 60_000;
 
     private final Socket socket;
     private final WorkerRegistry workers;
@@ -47,6 +48,14 @@ final class WorkerConnectionHandler implements Runnable {
     @Override
     public void run() {
         WorkerSession session = null;
+        try {
+            // a worker that is alive talks at least every few seconds (REQUEST_WORK polling, PAGE_RESULTs);
+            // silence for this long means it vanished without FIN/RST (cable, suspend, NAT) -> treat as crash
+            socket.setSoTimeout(READ_TIMEOUT_MS);
+            socket.setKeepAlive(true);
+        } catch (IOException e) {
+            log.warn("cannot configure socket {}: {}", socket.getRemoteSocketAddress(), e.getMessage());
+        }
         try (socket;
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
@@ -78,16 +87,12 @@ final class WorkerConnectionHandler implements Runnable {
                     continue;
                 }
 
-                switch (message) {
-                    case Message.RequestWork request -> session.send(scheduler.assign(request));
-                    case Message.PageResult result -> {
-                        log.info("PAGE_RESULT from {} for job {} ({}) handled on thread {}",
-                                result.workerId(), result.jobId(), result.url(), Thread.currentThread().threadId());
-                        resultService.handle(result);
-                    }
-                    case Message.Register ignored -> session.send(new Message.Error("already registered"));
-                    case Message.Error error -> log.warn("worker {} reports error: {}", session.workerId(), error.message());
-                    default -> session.send(new Message.Error("unexpected message type"));
+                try {
+                    dispatch(session, message);
+                } catch (RuntimeException e) {
+                    // e.g. a DB constraint violation for one result must not kill the whole worker connection
+                    log.error("handling {} from worker {} failed", message.getClass().getSimpleName(), session.workerId(), e);
+                    session.send(new Message.Error("internal error: " + e.getMessage()));
                 }
             }
             log.info("worker {} disconnected (EOF)", session == null ? socket.getRemoteSocketAddress() : session.workerId());
@@ -96,15 +101,34 @@ final class WorkerConnectionHandler implements Runnable {
                     session == null ? socket.getRemoteSocketAddress() : session.workerId(), e.getMessage());
         } finally {
             if (session != null) {
-                recover(session.workerId());
+                recover(session);
             }
             onClose.run();
         }
     }
 
+    private void dispatch(WorkerSession session, Message message) {
+        switch (message) {
+            case Message.RequestWork request -> session.send(scheduler.assign(request));
+            case Message.PageResult result -> {
+                log.info("PAGE_RESULT from {} for job {} ({}) handled on thread {}",
+                        result.workerId(), result.jobId(), result.url(), Thread.currentThread().threadId());
+                resultService.handle(result);
+            }
+            case Message.Register ignored -> session.send(new Message.Error("already registered"));
+            case Message.Error error -> log.warn("worker {} reports error: {}", session.workerId(), error.message());
+            default -> session.send(new Message.Error("unexpected message type"));
+        }
+    }
+
     /** Crash recovery: forget the worker and give its open URLs back to the frontiers. */
-    private void recover(String workerId) {
-        workers.remove(workerId);
+    private void recover(WorkerSession session) {
+        String workerId = session.workerId();
+        if (!workers.remove(session)) {
+            // the worker already reconnected with the same id; its new session owns the current in-flight URLs
+            log.warn("worker {} stale connection closed, current session kept", workerId);
+            return;
+        }
         int requeued = 0;
         for (JobRuntime runtime : jobs.all()) {
             requeued += runtime.requeue(workerId);

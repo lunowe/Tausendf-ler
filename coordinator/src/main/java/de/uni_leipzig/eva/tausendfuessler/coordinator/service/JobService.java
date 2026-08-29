@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /** Job lifecycle: create, pause, resume, abort, read. Keeps DB status and in-memory runtime in sync. */
 @Service
@@ -63,31 +64,59 @@ public class JobService {
     }
 
     public void pause(String jobId) {
-        JobEntity job = require(jobId);
-        transition(job, JobStatus.RUNNING, JobStatus.PAUSED);
-        runtimes.get(jobId).ifPresent(r -> r.setStatus(JobStatus.PAUSED));
+        underRuntimeLock(jobId, runtime -> {
+            JobEntity job = require(jobId);
+            transition(job, JobStatus.RUNNING, JobStatus.PAUSED);
+            if (runtime != null) {
+                runtime.setStatus(JobStatus.PAUSED);
+            }
+        });
         workers.broadcast(new Message.JobSignal(jobId, Message.Signal.PAUSE));
     }
 
     public void resume(String jobId) {
-        JobEntity job = require(jobId);
-        transition(job, JobStatus.PAUSED, JobStatus.RUNNING);
-        runtimes.get(jobId).ifPresent(r -> r.setStatus(JobStatus.RUNNING));
+        underRuntimeLock(jobId, runtime -> {
+            JobEntity job = require(jobId);
+            transition(job, JobStatus.PAUSED, JobStatus.RUNNING);
+            if (runtime != null) {
+                runtime.setStatus(JobStatus.RUNNING);
+            }
+        });
         workers.broadcast(new Message.JobSignal(jobId, Message.Signal.RESUME));
     }
 
     public void abort(String jobId) {
-        JobEntity job = require(jobId);
-        JobStatus current = job.getStatus();
-        if (current != JobStatus.RUNNING && current != JobStatus.PAUSED) {
-            throw new IllegalStateException("Cannot abort job in status " + current);
-        }
-        job.setStatus(JobStatus.ABORTED);
-        job.setFinishedAt(Instant.now());
-        jobs.save(job);
-        runtimes.remove(jobId);
+        underRuntimeLock(jobId, runtime -> {
+            JobEntity job = require(jobId);
+            JobStatus current = job.getStatus();
+            if (current != JobStatus.RUNNING && current != JobStatus.PAUSED) {
+                throw new IllegalStateException("Cannot abort job in status " + current);
+            }
+            job.setStatus(JobStatus.ABORTED);
+            job.setFinishedAt(Instant.now());
+            jobs.save(job);
+            if (runtime != null) {
+                runtime.setStatus(JobStatus.ABORTED);
+                runtimes.remove(jobId);
+            }
+        });
         workers.broadcast(new Message.JobSignal(jobId, Message.Signal.ABORT));
         log.info("job {} aborted", jobId);
+    }
+
+    /**
+     * Runs a status transition while holding the job's runtime monitor, so that it cannot interleave with
+     * {@link ResultService}'s load-update-save of the same row (which would otherwise overwrite the new status).
+     */
+    private void underRuntimeLock(String jobId, Consumer<JobRuntime> action) {
+        JobRuntime runtime = runtimes.get(jobId).orElse(null);
+        if (runtime == null) {
+            action.accept(null);
+            return;
+        }
+        synchronized (runtime) {
+            action.accept(runtime);
+        }
     }
 
     public JobEntity getDetail(String jobId) {

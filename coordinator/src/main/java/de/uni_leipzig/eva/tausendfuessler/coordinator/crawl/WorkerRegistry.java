@@ -29,6 +29,11 @@ public class WorkerRegistry {
         return sessions.remove(workerId);
     }
 
+    /** Removes {@code session} only if it is still the registered one for its worker id (not a reconnect). */
+    public boolean remove(WorkerSession session) {
+        return sessions.remove(session.workerId(), session);
+    }
+
     public Collection<WorkerSession> all() {
         return sessions.values();
     }

@@ -86,7 +86,8 @@ Worker                                   Koordinator
   `d + 1`, sofern `d + 1 ≤ maxDepth`.
 * **Filter**: Wenn gesetzt, werden nur Links weiterverfolgt, deren URL mindestens einen Filter-String
   enthält (einfacher `contains`, kein Regex).
-* **Worker-Absturz**: Socket-Fehler oder EOF im Handler-Thread → alle "in flight"-URLs dieses
+* **Worker-Absturz**: Socket-Fehler, EOF oder 60 s Funkstille (Read-Timeout; ein lebender Worker
+  sendet ständig `REQUEST_WORK`/`PAGE_RESULT`) im Handler-Thread → alle "in flight"-URLs dieses
   Workers zurück in die Frontier, Vorfall ins Log, Worker aus der Registry.
 * **Worker-Reconnect**: Worker versucht bei Verbindungsverlust mit Backoff (1 s … 10 s) erneut.
 * **Job-Ende**: Frontier leer und keine URLs in flight → `COMPLETED`. `ABORT` → `ABORTED`,

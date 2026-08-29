@@ -35,11 +35,16 @@ public class PageFetcher {
                     .build();
 
             var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            return new FetchResult(response.statusCode(), response.body());
+            return new FetchResult(response.statusCode(), response.body(), response.uri().toString());
         } catch (Exception e) {
             throw new CrawlException("Failed to fetch " + url + ": " + e.getMessage(), e);
         }
     }
 
-    public record FetchResult(int httpStatus, String body) {}
+    /** {@code finalUrl} is the URL after redirects; relative links must be resolved against it. */
+    public record FetchResult(int httpStatus, String body, String finalUrl) {
+        public FetchResult(int httpStatus, String body) {
+            this(httpStatus, body, null);
+        }
+    }
 }

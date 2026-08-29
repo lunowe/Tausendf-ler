@@ -47,6 +47,9 @@ public class ResultService {
         }
 
         synchronized (runtime) {
+            if (runtime.status() == JobStatus.ABORTED) {
+                return; // aborted while this result was waiting for the lock; the job row is already final
+            }
             runtime.complete(result.url());
             if (result.error() == null) {
                 long seq = runtime.nextSeq();
