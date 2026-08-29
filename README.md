@@ -85,3 +85,5 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
 - [x] End-to-End-Test (`coordinator/.../EndToEndTest`: REST → Koordinator → 2 echte Worker → lokale Test-Site → H2)
       und manueller Smoke-Test gegen Postgres inkl. Worker-Absturz während eines Jobs
 - [x] Lasttest-Client für die nicht-funktionalen Anforderungen (`loadtest`, Ergebnisse in [docs/NFA-Report.md](docs/NFA-Report.md))
+- [x] Livetest über Telegram (2026-08-29): alle Befehle inkl. Live-Stream, Pause/Resume/Abort, Sitemap-Crawl mit 437 Seiten
+- [ ] Skizze auf finale Architektur aktualisieren, Präsentation
