@@ -1,0 +1,361 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Tausendfuessler – "Blaupause": technical-drawing look for a crawler
+   control room. Deep navy ground, hairline survey grid, amber as the
+   only saturated accent, serif display over monospaced telemetry.
+   ------------------------------------------------------------------ */
+
+:root {
+  --void: #04090f;
+  --ground: #071320;
+  --panel: #0a1a29;
+  --panel-high: #0d2233;
+  --line: rgba(126, 190, 224, 0.2);
+  --line-soft: rgba(126, 190, 224, 0.075);
+  --line-faint: rgba(126, 190, 224, 0.035);
+
+  --ink: #dfeaf2;
+  --ink-dim: #7e9bb0;
+  --ink-faint: #4c6a80;
+
+  --amber: #ffb24c;
+  --amber-soft: rgba(255, 178, 76, 0.14);
+  --mint: #63e0ac;
+  --coral: #ff7a63;
+  --cyan: #7fd8f0;
+
+  --st-PENDING: var(--cyan);
+  --st-RUNNING: var(--amber);
+  --st-PAUSED: #b9a4ff;
+  --st-COMPLETED: var(--mint);
+  --st-ABORTED: var(--ink-dim);
+  --st-FAILED: var(--coral);
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-ink-faint: var(--ink-faint);
+  --color-amber: var(--amber);
+  --color-mint: var(--mint);
+  --color-coral: var(--coral);
+  --color-cyan: var(--cyan);
+  --color-line: var(--line);
+  --font-display: var(--font-display), Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--line);
+}
+
+html {
+  background: var(--void);
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "ss02" on;
+  background-color: var(--ground);
+  background-image:
+    radial-gradient(
+      120% 80% at 12% -10%,
+      rgba(255, 178, 76, 0.08) 0%,
+      transparent 55%
+    ),
+    radial-gradient(90% 70% at 100% 0%, rgba(127, 216, 240, 0.07) 0%, transparent 50%),
+    linear-gradient(var(--line-faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-faint) 1px, transparent 1px),
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    28px 28px,
+    28px 28px,
+    140px 140px,
+    140px 140px;
+  background-attachment: fixed;
+}
+
+/* Film grain so the flat navy never looks like a plastic gradient. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--void);
+}
+
+/* --- typography ------------------------------------------------- */
+
+.display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 0.95;
+}
+
+.label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- surfaces ---------------------------------------------------- */
+
+/* Bordered plate with two registration marks, like a plotted drawing. */
+.panel {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(0, 0, 0, 0.12)),
+    rgba(7, 19, 32, 0.72);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(2px);
+}
+
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-color: var(--amber);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.panel::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.panel::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--line-soft) 0 1px,
+    transparent 1px 7px
+  );
+}
+
+/* --- controls ----------------------------------------------------- */
+
+.field {
+  width: 100%;
+  background: rgba(4, 9, 15, 0.55);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8125rem;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.field::placeholder {
+  color: var(--ink-faint);
+}
+
+.field:focus {
+  border-color: var(--amber);
+  background: rgba(255, 178, 76, 0.05);
+  box-shadow: 0 0 0 1px var(--amber-soft);
+}
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  border-color: var(--amber);
+  color: var(--void);
+  background: var(--amber);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  color: var(--void);
+  background: #ffc880;
+  border-color: #ffc880;
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--coral);
+  color: var(--coral);
+  background: rgba(255, 122, 99, 0.12);
+}
+
+.link-underline {
+  background-image: linear-gradient(var(--amber), var(--amber));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size 0.25s ease;
+}
+
+.link-underline:hover {
+  background-size: 100% 1px;
+}
+
+/* --- motion ------------------------------------------------------ */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes segment-in {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+    border-left-color: var(--amber);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.segment-in {
+  animation: segment-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+.pulse {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes crawl {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.crawler-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 25%;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  animation: crawl 1.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
+/* --- scrollbar ---------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #14324a;
+  border: 2px solid var(--void);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1d4866;
+}
