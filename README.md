@@ -30,9 +30,8 @@ Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze und Aufgabenstellung: [docs/]
 ## Voraussetzungen
 
 * JDK 21+, Maven 3.9+
-* Docker (für lokales Postgres) – oder Zugangsdaten zur gemeinsamen Cloud-DB
-  (Achtung: läuft lokal schon ein Postgres auf 5432, z. B. via Homebrew, `DB_URL` auf die Cloud-DB
-  oder auf einen anderen Port zeigen lassen)
+* Docker (für lokales Postgres, per Compose auf Host-Port **5433**, damit ein evtl. vorhandenes
+  lokales Postgres auf 5432 nicht stört) – oder Zugangsdaten zur gemeinsamen Cloud-DB in `DB_URL`
 * Telegram-Bot-Token von [@BotFather](https://t.me/BotFather)
 
 ## Starten

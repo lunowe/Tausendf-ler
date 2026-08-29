@@ -2,7 +2,7 @@ spring:
   application:
     name: tausendfuessler-coordinator
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/tausendfuessler}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/tausendfuessler}
     username: ${DB_USER:tausendfuessler}
     password: ${DB_PASSWORD:tausendfuessler}
   jpa:
