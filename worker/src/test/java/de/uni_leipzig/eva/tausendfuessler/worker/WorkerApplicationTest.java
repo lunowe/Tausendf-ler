@@ -8,19 +8,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 class WorkerApplicationTest {
 
     @Test
-    void parsesUrlArg() {
-        var args = new String[]{"--url", "https://example.com", "--threads", "4"};
+    void parsesCoordinatorThreadsAndId() {
+        var args = new String[]{"--coordinator", "localhost:9090", "--threads", "4", "--id", "w1"};
         var map = WorkerApplication.parseArgs(args);
-        assertThat(map.get("--url")).isEqualTo("https://example.com");
+        assertThat(map.get("--coordinator")).isEqualTo("localhost:9090");
         assertThat(map.get("--threads")).isEqualTo("4");
+        assertThat(map.get("--id")).isEqualTo("w1");
     }
 
     @Test
-    void parsesUrlWithoutThreads() {
-        var args = new String[]{"--url", "https://example.com"};
-        var map = WorkerApplication.parseArgs(args);
-        assertThat(map.get("--url")).isEqualTo("https://example.com");
-        assertThat(map).hasSize(1);
+    void parsesCoordinatorAddress() {
+        var address = WorkerApplication.parseCoordinator("crawl-host:1234");
+        assertThat(address.host()).isEqualTo("crawl-host");
+        assertThat(address.port()).isEqualTo(1234);
     }
 
     @Test
@@ -38,7 +38,7 @@ class WorkerApplicationTest {
 
     @Test
     @Timeout(10)
-    void missingUrlPrintsUsageToStdErrAndExitsWithCodeOne() throws Exception {
+    void missingCoordinatorPrintsUsageToStdErrAndExitsWithCodeOne() throws Exception {
         var javaBin = System.getProperty("java.home") + "/bin/java";
         var classPath = System.getProperty("java.class.path");
         var pb = new ProcessBuilder(javaBin, "-cp", classPath,
@@ -47,12 +47,12 @@ class WorkerApplicationTest {
         var err = new String(process.getErrorStream().readAllBytes());
         var exitCode = process.waitFor();
         assertThat(exitCode).isEqualTo(1);
-        assertThat(err).contains("Usage:");
+        assertThat(err).contains(WorkerApplication.USAGE);
     }
 
     @Test
     @Timeout(10)
-    void crawlFailurePrintsErrorToStdErrAndExitsWithCodeOne() throws Exception {
+    void oldUrlModeIsRejected() throws Exception {
         var javaBin = System.getProperty("java.home") + "/bin/java";
         var classPath = System.getProperty("java.class.path");
         var pb = new ProcessBuilder(javaBin, "-cp", classPath,
@@ -62,6 +62,6 @@ class WorkerApplicationTest {
         var err = new String(process.getErrorStream().readAllBytes());
         var exitCode = process.waitFor();
         assertThat(exitCode).isEqualTo(1);
-        assertThat(err).contains("Error:");
+        assertThat(err).contains(WorkerApplication.USAGE);
     }
 }

@@ -34,7 +34,15 @@ public final class CrawlExecutor {
     }
 
     public CompletableFuture<CrawlOutcome> submit(String url) {
-        return CompletableFuture.supplyAsync(() -> crawl(url), executor);
+        return submit(url, () -> {});
+    }
+
+    /** Runs a job-control check on the crawl-pool thread immediately before fetching. */
+    public CompletableFuture<CrawlOutcome> submit(String url, Runnable beforeCrawl) {
+        return CompletableFuture.supplyAsync(() -> {
+            beforeCrawl.run();
+            return crawl(url);
+        }, executor);
     }
 
     public void shutdown() {
