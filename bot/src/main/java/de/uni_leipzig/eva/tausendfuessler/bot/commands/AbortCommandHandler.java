@@ -33,6 +33,10 @@ public class AbortCommandHandler implements CommandHandler {
             // Prüfen, ob der Job überhaupt abgebrochen werden kann
             JobDetail detail = coordinatorClient.getJobDetail(jobId);
 
+            if (detail.getStatus() == JobStatus.FAILED) {
+                sender.sendReply(update, "⚠️ Auftrag " + jobId + " ist fehlgeschlagen und kann nicht abgebrochen werden.");
+                return;
+            }
             if (detail.getStatus() == JobStatus.COMPLETED) {
                 sender.sendReply(update, "⚠️ Auftrag " + jobId + " ist bereits abgeschlossen.");
                 return;

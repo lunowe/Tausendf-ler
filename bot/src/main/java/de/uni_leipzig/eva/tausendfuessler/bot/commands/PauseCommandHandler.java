@@ -33,6 +33,10 @@ public class PauseCommandHandler implements CommandHandler {
             // Prüfen, ob der Job überhaupt pausiert werden kann
             JobDetail detail = coordinatorClient.getJobDetail(jobId);
 
+            if (detail.getStatus() == JobStatus.FAILED) {
+                sender.sendReply(update, "⚠️ Auftrag " + jobId + " ist fehlgeschlagen und kann nicht pausiert werden.");
+                return;
+            }
             if (detail.getStatus() == JobStatus.COMPLETED) {
                 sender.sendReply(update, "⚠️ Auftrag " + jobId + " ist bereits abgeschlossen.");
                 return;

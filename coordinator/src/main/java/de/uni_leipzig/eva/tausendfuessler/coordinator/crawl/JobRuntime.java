@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,6 +41,7 @@ public final class JobRuntime {
     private final AtomicLong pagesVisited = new AtomicLong();
     private final AtomicLong linksFound = new AtomicLong();
     private final AtomicLong errors = new AtomicLong();
+    private final AtomicInteger currentDepth = new AtomicInteger();
 
     public JobRuntime(String jobId, String startUrl, int maxDepth, List<String> filters) {
         this.jobId = jobId;
@@ -155,6 +157,10 @@ public final class JobRuntime {
     public void incrementPagesVisited() { pagesVisited.incrementAndGet(); }
     public void addLinksFound(int n) { linksFound.addAndGet(n); }
     public void incrementErrors() { errors.incrementAndGet(); }
+
+    /** Highest depth for which a worker has already delivered a result (0 until the start URL is answered). */
+    public int currentDepth() { return currentDepth.get(); }
+    public void noteDepthReached(int depth) { currentDepth.accumulateAndGet(depth, Math::max); }
 
     public int inFlightCount() { return inFlight.size(); }
     public int frontierSize() { return frontier.values().stream().mapToInt(ConcurrentLinkedQueue::size).sum(); }

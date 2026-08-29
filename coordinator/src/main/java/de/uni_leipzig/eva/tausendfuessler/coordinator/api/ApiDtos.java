@@ -22,11 +22,11 @@ public final class ApiDtos {
         }
     }
 
-    public record JobDetail(String jobId, String url, int maxDepth, JobStatus status,
+    public record JobDetail(String jobId, String url, int maxDepth, int currentDepth, JobStatus status,
                             long pagesVisited, long linksFound, long errors,
                             Instant startedAt, Instant finishedAt, Instant createdAt) {
         static JobDetail of(JobEntity j) {
-            return new JobDetail(j.getId(), j.getUrl(), j.getMaxDepth(), j.getStatus(),
+            return new JobDetail(j.getId(), j.getUrl(), j.getMaxDepth(), j.getCurrentDepth(), j.getStatus(),
                     j.getPagesVisited(), j.getLinksFound(), j.getErrors(),
                     j.getStartedAt(), j.getFinishedAt(), j.getCreatedAt());
         }

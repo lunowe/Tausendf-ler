@@ -36,7 +36,7 @@ public class StatusCommandHandler implements CommandHandler {
             StringBuilder sb = new StringBuilder();
             sb.append("📊 Status für ").append(d.getJobId()).append("\n\n")
               .append("🔗 ").append(d.getUrl()).append('\n')
-              .append("📏 Max. Tiefe: ").append(d.getMaxDepth()).append('\n')
+              .append("📏 Tiefe: ").append(d.getCurrentDepth()).append('/').append(d.getMaxDepth()).append('\n')
               .append("📌 ").append(formatStatus(d.getStatus())).append('\n')
               .append("📄 Besuchte Seiten: ").append(d.getPagesVisited()).append('\n')
               .append("🔗 Extrahierte Links: ").append(d.getLinksFound()).append('\n')

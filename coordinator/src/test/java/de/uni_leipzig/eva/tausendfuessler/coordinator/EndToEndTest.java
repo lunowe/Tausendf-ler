@@ -111,6 +111,7 @@ class EndToEndTest {
 
         assertThat(detail.get("pagesVisited").asLong()).isEqualTo(OK_PAGES_DEPTH_2);
         assertThat(detail.get("errors").asLong()).isEqualTo(1);
+        assertThat(detail.get("currentDepth").asInt()).isEqualTo(2);
 
         List<JsonNode> results = allResults(jobId);
         assertThat(results).hasSize(OK_PAGES_DEPTH_2);

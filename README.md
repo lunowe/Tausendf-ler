@@ -25,7 +25,7 @@ Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze und Aufgabenstellung: [docs/]
 | `common` | Plain Java + Jackson | Socket-Protokoll (`Message`-Records) |
 | `coordinator` | Spring Boot Web + Data JPA | Nimmt Jobs per REST an, verteilt URLs an Worker, persistiert Ergebnisse |
 | `worker` | Plain Java (kein Spring) | Verbindet sich zum Koordinator, crawlt URL-Pakete parallel |
-| `bot` | Spring Boot + telegrambots | Telegram-Oberfläche: `/crawl`, `/list`, `/status`, `/pause`, `/resume`, `/abort`, `/stats` |
+| `bot` | Spring Boot + telegrambots | Telegram-Oberfläche: `/crawl`, `/list`, `/status`, `/pause`, `/resume`, `/abort`, `/search`, `/stats` |
 
 ## Voraussetzungen
 
