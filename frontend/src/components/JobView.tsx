@@ -2,26 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import {
-  api,
-  isTerminal,
-  type JobDetail,
-  type PageResult,
-} from "@/lib/api";
+import { api, isTerminal, type JobDetail, type PageResult } from "@/lib/api";
 import { usePolling } from "@/lib/usePolling";
 import { clock, dateTime, duration, host, num, path } from "@/lib/format";
 import { LiveStream } from "@/components/LiveStream";
 import {
+  Dot,
   Empty,
   ErrorNote,
   Metric,
   SectionLabel,
+  Skeleton,
   StatusBadge,
   statusColor,
+  statusLabel,
 } from "@/components/ui";
 
 const POLL_MS = 1000;
-/** The coordinator answers /results with at most this many rows (JobService.RESULT_PAGE_SIZE). */
+/** Der Koordinator liefert pro /results-Antwort höchstens so viele Zeilen (JobService.RESULT_PAGE_SIZE). */
 const RESULT_PAGE_SIZE = 50;
 
 export function JobView({ jobId }: { jobId: string }) {
@@ -32,19 +30,30 @@ export function JobView({ jobId }: { jobId: string }) {
   const { pages, error: streamError } = useLiveResults(jobId, streaming);
 
   if (job.pending && !detail) {
-    return <Empty>lade Auftrag …</Empty>;
+    return (
+      <div className="space-y-6">
+        <BackLink />
+        <Skeleton className="h-10 w-2/3 max-w-sm" />
+        <Skeleton className="h-3 w-1/3 max-w-xs" />
+      </div>
+    );
   }
   if (!detail) {
     return (
       <div className="space-y-6">
         <BackLink />
-        <ErrorNote>{job.error ?? "Auftrag nicht gefunden"}</ErrorNote>
+        <ErrorNote onRetry={job.refresh}>
+          {job.error ?? "Auftrag nicht gefunden"}
+        </ErrorNote>
+        <Empty hint="Prüfe die Job-ID, oder öffne den Auftrag über die Liste im Leitstand.">
+          Zu dieser ID liegt kein Auftrag vor.
+        </Empty>
       </div>
     );
   }
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-12 md:space-y-14">
       <JobHeader detail={detail} onChanged={job.refresh} />
 
       <section>
@@ -57,21 +66,18 @@ export function JobView({ jobId }: { jobId: string }) {
           index="03"
           right={
             <span
-              className="mono flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.18em]"
-              style={{ color: streaming ? "var(--amber)" : "var(--ink-faint)" }}
+              className="mono flex items-center gap-2 text-[0.625rem] uppercase tracking-[0.1em]"
+              style={{ color: streaming ? "var(--aqua-deep)" : "var(--ink-3)" }}
             >
-              <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${streaming ? "pulse" : ""}`}
-                style={{
-                  background: streaming ? "var(--amber)" : "var(--ink-faint)",
-                  color: "var(--amber)",
-                }}
+              <Dot
+                color={streaming ? "var(--aqua-deep)" : "var(--ink-4)"}
+                live={streaming}
               />
               {streaming ? `Live · alle ${POLL_MS / 1000} s` : "Stream beendet"}
             </span>
           }
         >
-          Live-Stream · {num(pages.length)} Segmente
+          Live-Stream · {num(pages.length)} Seiten
         </SectionLabel>
 
         {streamError && (
@@ -98,7 +104,7 @@ function BackLink() {
   return (
     <Link
       href="/"
-      className="mono link-underline inline-block text-[0.6875rem] uppercase tracking-[0.18em] text-[var(--ink-dim)] hover:text-[var(--amber)]"
+      className="mono link-underline inline-block text-[0.6875rem] uppercase tracking-[0.1em] text-[var(--ink-2)] hover:text-[var(--granat)]"
     >
       ← Leitstand
     </Link>
@@ -113,24 +119,25 @@ function JobHeader({
   onChanged: () => void;
 }) {
   return (
-    <section className="reveal pt-4">
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+    <section>
+      <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2">
         <BackLink />
-        <span className="mono text-[0.625rem] text-[var(--ink-faint)]">
+        <span className="mono truncate text-[0.625rem] text-[var(--ink-4)]">
           {detail.jobId}
         </span>
       </div>
 
-      <div className="flex flex-wrap items-start justify-between gap-6">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
-          <h1 className="display break-words text-[2.75rem] leading-[1] md:text-[3.5rem]">
+          <p className="label mb-2">Auftrag</p>
+          <h1 className="display break-words text-[2rem] md:text-[2.75rem]">
             {host(detail.url)}
           </h1>
           <a
             href={detail.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="mono link-underline mt-3 inline-block break-all text-[0.8125rem] text-[var(--ink-dim)] hover:text-[var(--amber)]"
+            className="mono link-underline mt-3 inline-block break-all text-[0.8125rem] text-[var(--ink-2)] hover:text-[var(--granat)]"
           >
             {detail.url}
           </a>
@@ -144,7 +151,7 @@ function JobHeader({
   );
 }
 
-/** Depth ladder: one cell per level, filled up to `currentDepth`. */
+/** Tiefenleiter: eine Zelle je Ebene, gefüllt bis `currentDepth`. */
 function DepthGauge({ detail }: { detail: JobDetail }) {
   const levels = Array.from({ length: detail.maxDepth + 1 }, (_, i) => i);
   const running = detail.status === "RUNNING";
@@ -152,28 +159,29 @@ function DepthGauge({ detail }: { detail: JobDetail }) {
 
   return (
     <div className="mt-8">
-      <div className="mb-2 flex items-baseline justify-between">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="label">
           Tiefe {detail.currentDepth} von {detail.maxDepth}
         </span>
-        <span className="mono text-[0.6875rem] text-[var(--ink-faint)]">
+        <span className="mono text-[0.6875rem] text-[var(--ink-3)]">
           {num(detail.pagesVisited)} Seiten · {num(detail.linksFound)} Links
         </span>
       </div>
-      <div className="flex gap-px">
+      <div
+        className="flex gap-px"
+        role="img"
+        aria-label={`Tiefe ${detail.currentDepth} von ${detail.maxDepth} erreicht`}
+      >
         {levels.map((level) => {
           const done = level <= detail.currentDepth;
+          const active = done && running && level === detail.currentDepth;
           return (
             <div
               key={level}
-              className={`relative h-2 flex-1 overflow-hidden ${
-                done && running && level === detail.currentDepth
-                  ? "crawler-bar"
-                  : ""
-              }`}
+              className={`relative h-2 flex-1 overflow-hidden ${active ? "sweep" : ""}`}
               style={{
-                background: done ? color : "var(--line-soft)",
-                opacity: done ? (level === detail.currentDepth ? 1 : 0.45) : 1,
+                background: done ? color : "var(--rule-soft)",
+                opacity: done && level !== detail.currentDepth ? 0.42 : 1,
               }}
               title={`Tiefe ${level}`}
             />
@@ -193,14 +201,18 @@ function Controls({
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmAbort, setConfirmAbort] = useState(false);
 
   const active = detail.status === "RUNNING" || detail.status === "PAUSED";
+  // Abgeleitet statt gespeichert: endet der Auftrag von selbst, verschwindet auch die Rückfrage.
+  const asking = confirmAbort && active;
 
   async function send(action: "pause" | "resume" | "abort") {
     setBusy(action);
     setError(null);
     try {
       await api.signal(detail.jobId, action);
+      setConfirmAbort(false);
       onChanged();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -210,35 +222,76 @@ function Controls({
   }
 
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-3">
-      <button
-        className="btn"
-        disabled={detail.status !== "RUNNING" || busy !== null}
-        onClick={() => send("pause")}
-      >
-        Pause
-      </button>
-      <button
-        className="btn"
-        disabled={detail.status !== "PAUSED" || busy !== null}
-        onClick={() => send("resume")}
-      >
-        Fortsetzen
-      </button>
-      <button
-        className="btn btn-danger"
-        disabled={!active || busy !== null}
-        onClick={() => send("abort")}
-      >
-        Abbrechen
-      </button>
-      <span className="mono text-[0.625rem] leading-relaxed text-[var(--ink-faint)]">
-        POST /api/jobs/{"{id}"}/…
-        <br />
-        Ungültige Übergänge beantwortet der Koordinator mit 409.
-      </span>
+    <div className="mt-8 border-t border-[var(--rule-soft)] pt-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          className="btn"
+          disabled={detail.status !== "RUNNING" || busy !== null}
+          title={
+            detail.status === "RUNNING"
+              ? "Keine neuen URLs mehr verteilen"
+              : `Nur möglich, solange der Auftrag läuft (aktuell: ${statusLabel(detail.status)})`
+          }
+          onClick={() => send("pause")}
+        >
+          Pause
+        </button>
+        <button
+          className="btn"
+          disabled={detail.status !== "PAUSED" || busy !== null}
+          title={
+            detail.status === "PAUSED"
+              ? "Verteilung wieder aufnehmen"
+              : `Nur möglich, wenn der Auftrag pausiert ist (aktuell: ${statusLabel(detail.status)})`
+          }
+          onClick={() => send("resume")}
+        >
+          Fortsetzen
+        </button>
+
+        {asking ? (
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="mono text-[0.6875rem] text-[var(--granat)]">
+              Wirklich abbrechen?
+            </span>
+            <button
+              className="btn btn-primary"
+              disabled={busy !== null}
+              onClick={() => send("abort")}
+            >
+              {busy === "abort" ? "Sendet …" : "Ja, abbrechen"}
+            </button>
+            <button
+              className="btn"
+              disabled={busy !== null}
+              onClick={() => setConfirmAbort(false)}
+            >
+              Zurück
+            </button>
+          </span>
+        ) : (
+          <button
+            className="btn btn-danger"
+            disabled={!active || busy !== null}
+            title={
+              active
+                ? "Auftrag beenden – gesammelte Ergebnisse bleiben erhalten"
+                : `Der Auftrag ist bereits beendet (${statusLabel(detail.status)})`
+            }
+            onClick={() => setConfirmAbort(true)}
+          >
+            Abbrechen
+          </button>
+        )}
+      </div>
+
+      <p className="mono mt-3 text-[0.625rem] leading-relaxed text-[var(--ink-3)]">
+        POST /api/jobs/{"{id}"}/pause | resume | abort · ungültige Übergänge
+        beantwortet der Koordinator mit 409.
+      </p>
+
       {error && (
-        <div className="w-full">
+        <div className="mt-4">
           <ErrorNote>{error}</ErrorNote>
         </div>
       )}
@@ -249,15 +302,12 @@ function Controls({
 function Facts({ detail, received }: { detail: JobDetail; received: number }) {
   return (
     <div className="grid grid-cols-2 gap-x-6 gap-y-7 md:grid-cols-4">
-      <Metric label="Besuchte Seiten" value={num(detail.pagesVisited)} accent />
-      <Metric label="Gefundene Links" value={num(detail.linksFound)} />
+      <Metric label="Besuchte Seiten" value={num(detail.pagesVisited)} tone="accent" />
+      <Metric label="Extrahierte Links" value={num(detail.linksFound)} />
       <Metric
         label="Fehler"
-        value={
-          <span style={{ color: detail.errors > 0 ? "var(--coral)" : undefined }}>
-            {num(detail.errors)}
-          </span>
-        }
+        value={num(detail.errors)}
+        tone={detail.errors > 0 ? "warn" : undefined}
       />
       <Metric
         label="Tiefe akt. / max"
@@ -279,48 +329,49 @@ function Facts({ detail, received }: { detail: JobDetail; received: number }) {
 
 function Report({ detail }: { detail: JobDetail }) {
   const rows: Array<[string, string]> = [
-    ["Status", detail.status],
+    ["Status", statusLabel(detail.status)],
     ["Start-URL", `${host(detail.url)}${path(detail.url)}`],
     ["Besuchte Seiten", num(detail.pagesVisited)],
     ["Extrahierte Links", num(detail.linksFound)],
     ["Fehler", num(detail.errors)],
     ["Erreichte Tiefe", `${detail.currentDepth} von ${detail.maxDepth}`],
-    ["Gesamtdauer", duration(detail.startedAt, detail.finishedAt)],
-    ["Beendet am", dateTime(detail.finishedAt)],
+    ["Dauer", duration(detail.startedAt, detail.finishedAt)],
+    ["Beendet", dateTime(detail.finishedAt)],
   ];
 
+  const headline =
+    detail.status === "COMPLETED"
+      ? "Crawl abgeschlossen"
+      : detail.status === "ABORTED"
+        ? "Crawl abgebrochen"
+        : "Crawl fehlgeschlagen";
+
   return (
-    <div className="panel p-6 md:p-8">
-      <div className="mb-6 flex items-baseline justify-between gap-4">
-        <h2 className="display text-[1.75rem]">
-          {detail.status === "COMPLETED"
-            ? "Crawl abgeschlossen"
-            : detail.status === "ABORTED"
-              ? "Crawl abgebrochen"
-              : "Crawl fehlgeschlagen"}
-        </h2>
+    <div className="card p-5 md:p-6">
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-[var(--rule-soft)] pb-4">
+        <h3 className="display text-[1.5rem]">{headline}</h3>
         <span
-          className="mono text-[0.625rem] uppercase tracking-[0.2em]"
+          className="mono text-[0.625rem] uppercase tracking-[0.12em]"
           style={{ color: statusColor(detail.status) }}
         >
-          Report
+          Bericht
         </span>
       </div>
-      <dl className="grid grid-cols-1 gap-px bg-[var(--line)] sm:grid-cols-2">
+      <dl className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-10">
         {rows.map(([label, value]) => (
           <div
             key={label}
-            className="flex items-baseline justify-between gap-4 bg-[var(--panel)] px-4 py-3"
+            className="flex items-baseline justify-between gap-4 border-b border-[var(--rule-soft)] py-2.5"
           >
             <dt className="label">{label}</dt>
-            <dd className="mono truncate text-[0.8125rem]">{value}</dd>
+            <dd className="mono truncate text-[0.8125rem] font-medium">{value}</dd>
           </div>
         ))}
       </dl>
       {detail.status === "ABORTED" && (
-        <p className="mono mt-5 text-[0.6875rem] leading-relaxed text-[var(--ink-faint)]">
-          Bereits gesammelte Ergebnisse bleiben erhalten – der Abbruch stoppt nur
-          die Verteilung neuer URLs an die Worker.
+        <p className="mt-5 max-w-[70ch] text-[0.8125rem] leading-relaxed text-[var(--ink-2)]">
+          Die bereits gesammelten Ergebnisse bleiben erhalten – der Abbruch stoppt
+          nur die Verteilung neuer URLs an die Worker.
         </p>
       )}
     </div>
@@ -330,16 +381,16 @@ function Report({ detail }: { detail: JobDetail }) {
 /* ------------------------------------------------------------------ */
 
 /**
- * The live stream: polls `/results?afterSeq=<letzte seq>` once per second and appends
- * everything new. A single tick drains all pending pages (the endpoint caps a response
- * at {@link RESULT_PAGE_SIZE} rows). When the job reaches a terminal state, `streaming`
- * flips to false, which triggers one last drain and then stops the timer.
+ * Der Live-Stream: fragt `/results?afterSeq=<letzte seq>` einmal pro Sekunde ab und hängt
+ * alles Neue an. Ein Tick leert die Warteschlange vollständig (der Endpunkt deckelt eine
+ * Antwort bei {@link RESULT_PAGE_SIZE} Zeilen). Erreicht der Auftrag einen Endzustand,
+ * kippt `streaming` auf false – das löst einen letzten Durchlauf aus und stoppt den Timer.
  */
 function useLiveResults(jobId: string, streaming: boolean) {
   const [pages, setPages] = useState<PageResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  // Safe as instance state: the route keys <JobView> by job id, so a different job
-  // is always a fresh component instance and never inherits this cursor.
+  // Als Instanzzustand sicher: die Route keyt <JobView> nach Job-ID, ein anderer Auftrag
+  // ist also immer eine frische Komponente und erbt diesen Cursor nie.
   const seq = useRef(0);
 
   useEffect(() => {
@@ -348,7 +399,7 @@ function useLiveResults(jobId: string, streaming: boolean) {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     const drain = async () => {
-      // Bounded loop so a fast crawl cannot keep one tick spinning forever.
+      // Begrenzte Schleife, damit ein schneller Crawl einen Tick nicht endlos beschäftigt.
       for (let round = 0; round < 20; round++) {
         const batch = await api.results(jobId, seq.current, controller.signal);
         if (cancelled || batch.length === 0) return;

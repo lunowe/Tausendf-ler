@@ -1,17 +1,41 @@
 import type { ReactNode } from "react";
 import type { JobStatus } from "@/lib/api";
 
+/** Wortlaut wie im Telegram-Bot (StatusCommandHandler), nur ohne Emoji. */
 const STATUS_LABEL: Record<JobStatus, string> = {
-  PENDING: "wartet",
-  RUNNING: "läuft",
-  PAUSED: "pausiert",
-  COMPLETED: "fertig",
-  ABORTED: "abgebrochen",
-  FAILED: "fehlgeschlagen",
+  PENDING: "Wartend",
+  RUNNING: "Läuft",
+  PAUSED: "Pausiert",
+  COMPLETED: "Abgeschlossen",
+  ABORTED: "Abgebrochen",
+  FAILED: "Fehlgeschlagen",
 };
+
+export function statusLabel(status: JobStatus): string {
+  return STATUS_LABEL[status];
+}
 
 export function statusColor(status: JobStatus): string {
   return `var(--st-${status})`;
+}
+
+/** Zustandspunkt; pulsiert nur, solange wirklich etwas passiert. */
+export function Dot({
+  color,
+  live = false,
+  className = "",
+}: {
+  color: string;
+  live?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-block h-[7px] w-[7px] shrink-0 rounded-full ${live ? "pulse" : ""} ${className}`}
+      style={{ background: color }}
+    />
+  );
 }
 
 export function StatusBadge({
@@ -24,21 +48,25 @@ export function StatusBadge({
   const color = statusColor(status);
   return (
     <span
-      className={`mono inline-flex shrink-0 items-center gap-2 border uppercase tracking-[0.18em] ${
-        size === "lg" ? "px-3 py-1.5 text-[0.6875rem]" : "px-2 py-1 text-[0.5625rem]"
+      className={`mono inline-flex shrink-0 items-center gap-2 border font-medium uppercase tracking-[0.1em] ${
+        size === "lg" ? "px-2.5 py-1.5 text-[0.6875rem]" : "px-2 py-1 text-[0.625rem]"
       }`}
-      style={{ color, borderColor: color, background: "rgba(0,0,0,0.25)" }}
+      style={{
+        color,
+        borderColor: `color-mix(in srgb, ${color} 38%, #fff)`,
+        background: `color-mix(in srgb, ${color} 8%, #fff)`,
+      }}
     >
-      <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${status === "RUNNING" ? "pulse" : ""}`}
-        style={{ background: color, color }}
-      />
+      <Dot color={color} live={status === "RUNNING"} />
       {STATUS_LABEL[status]}
     </span>
   );
 }
 
-/** Numbered small-caps section heading, like a callout on a technical drawing. */
+/**
+ * Nummerierte Abschnittsmarke mit durchlaufender Haarlinie – wie die
+ * Gliederung eines gedruckten Berichts.
+ */
 export function SectionLabel({
   index,
   children,
@@ -49,62 +77,99 @@ export function SectionLabel({
   right?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-baseline gap-3">
-      <span className="mono text-[0.625rem] text-[var(--amber)]">{index}</span>
-      <span className="label text-[var(--ink-dim)]">{children}</span>
-      <span className="h-px flex-1 translate-y-[-3px] bg-[var(--line)]" />
+    <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <span className="mono text-[0.6875rem] font-medium text-[var(--granat)]">
+        {index}
+      </span>
+      <h2 className="label text-[var(--ink-2)]">{children}</h2>
+      <span
+        className="hidden h-px flex-1 -translate-y-[3px] bg-[var(--rule)] sm:block"
+        aria-hidden="true"
+      />
       {right}
     </div>
   );
 }
 
-export function Panel({
+export function Card({
   children,
   className = "",
 }: {
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={`panel ${className}`}>{children}</div>;
+  return <div className={`card ${className}`}>{children}</div>;
 }
 
-export function ErrorNote({ children }: { children: ReactNode }) {
+export function ErrorNote({
+  children,
+  onRetry,
+}: {
+  children: ReactNode;
+  onRetry?: () => void;
+}) {
   return (
-    <p
-      className="mono flex items-start gap-2 border border-[var(--coral)] bg-[rgba(255,122,99,0.08)] px-3 py-2 text-[0.75rem] text-[var(--coral)]"
+    <div
       role="alert"
+      className="flex flex-wrap items-center gap-x-4 gap-y-2 border border-[rgba(176,47,44,0.35)] bg-[var(--granat-tint)] px-4 py-3"
     >
-      <span aria-hidden="true">!</span>
-      <span>{children}</span>
-    </p>
-  );
-}
-
-export function Empty({ children }: { children: ReactNode }) {
-  return (
-    <div className="hatch flex items-center justify-center border border-dashed border-[var(--line)] px-6 py-14">
-      <p className="mono text-[0.75rem] text-[var(--ink-faint)]">{children}</p>
+      <span className="label shrink-0 text-[var(--granat)]">Fehler</span>
+      <p className="mono min-w-0 flex-1 text-[0.75rem] leading-relaxed text-[var(--ink)]">
+        {children}
+      </p>
+      {onRetry && (
+        <button type="button" className="btn btn-danger shrink-0" onClick={onRetry}>
+          Erneut versuchen
+        </button>
+      )}
     </div>
   );
 }
 
-/** Label/value row used for the job metadata grid. */
+/** Leerer Zustand: sagt, was fehlt, und was als Nächstes zu tun ist. */
+export function Empty({
+  children,
+  hint,
+}: {
+  children: ReactNode;
+  hint?: ReactNode;
+}) {
+  return (
+    <div className="hatch border border-dashed border-[var(--rule)] px-6 py-12 text-center">
+      <p className="text-[0.875rem] text-[var(--ink-2)]">{children}</p>
+      {hint && (
+        <p className="mono mx-auto mt-2 max-w-[46ch] text-[0.6875rem] leading-relaxed text-[var(--ink-3)]">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <span aria-hidden="true" className={`skeleton block ${className}`} />;
+}
+
+/** Beschriftetes Messfeld für die Kennzahlen-Raster. */
 export function Metric({
   label,
   value,
-  accent,
+  tone,
 }: {
   label: string;
   value: ReactNode;
-  accent?: boolean;
+  tone?: "accent" | "warn";
 }) {
+  const color =
+    tone === "accent"
+      ? "var(--aqua-deep)"
+      : tone === "warn"
+        ? "var(--granat)"
+        : "var(--ink)";
   return (
-    <div className="border-l border-[var(--line)] pl-3">
+    <div className="border-l border-[var(--rule)] pl-3">
       <p className="label mb-1.5">{label}</p>
-      <p
-        className="mono text-[0.9375rem]"
-        style={{ color: accent ? "var(--amber)" : "var(--ink)" }}
-      >
+      <p className="mono text-[0.9375rem] font-medium" style={{ color }}>
         {value}
       </p>
     </div>

@@ -45,3 +45,24 @@ Details, die leicht übersehen werden:
 * Pause/Fortsetzen/Abbrechen sind genau dann aktiv, wenn der Zustandsautomat des Koordinators den
   Übergang erlaubt; ein trotzdem abgelehnter Aufruf (409) wird als Fehlermeldung angezeigt.
 * Browser-Aufträge nutzen `owner = 0`, damit sie sich nicht mit Telegram-Chat-IDs überschneiden.
+
+## Gestaltung
+
+Heller „Institutsblatt“-Look: warmes Papier, Haarlinien, kantige Flächen, Basalt als Schriftfarbe.
+Akzente kommen aus dem Corporate Design der Universität Leipzig – Granat `#B02F2C` für Marke,
+primäre Aktion und Fehler, Aquamarin `#8AC2D1` / `#2C7189` für alles Messbare (Tiefe, Live-Stream,
+Kennzahlen). Alle Farben, Zustandsfarben und Bedienelement-Klassen stehen als CSS-Variablen in
+`src/app/globals.css`; Tailwind übernimmt nur Layout.
+
+* **Schrift**: IBM Plex in drei Stimmen – Serif für Titel, Sans für Fließtext, Mono für alles
+  Gemessene (`.display`, `.label`, `.mono`).
+* **Zustände**: Die sechs Auftragszustände haben eine gedeckte Farbskala (`--st-*`), alle mit
+  mindestens 4,5:1 Kontrast auf Weiß. Die Beschriftungen sind wortgleich mit dem Telegram-Bot
+  (Wartend, Läuft, Pausiert, Abgeschlossen, Abgebrochen, Fehlgeschlagen).
+* **Bewegung** nur dort, wo sie etwas meldet: der pulsierende Punkt eines laufenden Auftrags, der
+  Laufbalken im aktiven Tiefenfeld und ein kurzes Aufleuchten neuer Live-Stream-Segmente. Neue
+  Segmente werden über ihre `seq` erkannt, die erste Ladung bleibt bewusst ruhig, und nichts
+  verschiebt sich dabei. `prefers-reduced-motion` schaltet alles ab.
+* **Zugänglichkeit**: sichtbarer Fokusring auf allen Bedienelementen, Sprunglink zum Inhalt,
+  Tiefenauswahl als echte Radiogruppe (Pfeiltasten), `aria-live` für Trefferzahl und Live-Stream,
+  Rückfrage vor dem Abbrechen.
