@@ -24,7 +24,7 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 | `POST` | `/api/jobs/{id}/abort` | – | 204 |
 | `GET` | `/api/stats` | – | `{totalJobs, activeJobs, totalPagesCrawled, topDomains{domain: count}}` |
 | `GET` | `/api/search?q=<text>&limit=<n>` | – | `[{url, title, textSnippet, jobId}]` (Postgres-Volltextsuche) |
-| `GET` | `/api/health` | – | `{status: "UP"}` |
+| `GET` | `/api/health` | – | `{status: "UP", time, startupSeconds}` (JVM-Start bis ApplicationReady) |
 
 * `status` ∈ `PENDING, RUNNING, PAUSED, COMPLETED, ABORTED, FAILED`
 * `owner` = Telegram-Chat-ID; `/list` zeigt nur eigene Jobs.

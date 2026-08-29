@@ -65,8 +65,8 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
 
 * **Keine externen Worker** verbinden – das Durchsatz-Szenario braucht die eigenen In-Prozess-Worker als
   einzige Quelle und bricht ab, wenn es einen fremden Worker erkennt.
-* Für das Startup-Szenario den Client direkt nach dem Koordinator-Prozess starten (misst die Zeit bis
-  `/api/health` antwortet).
+* Das Startup-Szenario liest die Startzeit aus `/api/health` (`startupSeconds`, JVM-Start bis
+  ApplicationReady, vom Koordinator selbst gemessen) – der Client kann jederzeit gestartet werden.
 * Optionen: `--coordinator http://localhost:8080`, `--worker-host localhost`, `--worker-port 9090`,
   `--scenario all|startup|status-latency|error-ratio|throughput|live-latency|dedup`, `--seconds 60`
   (Dauer des Fehlerquoten-Tests), `--pages 2000` (Größe der Durchsatz-Site), `--report <Pfad>`, `--run-label "…"`.

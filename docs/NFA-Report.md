@@ -22,11 +22,11 @@ Ergebnis: **erfuellt**
 
 | Kennzahl | Wert |
 |---|---|
-| Zeit bis /api/health = 200 | 3.3 s |
+| Startzeit des Koordinators (JVM-Start bis ApplicationReady) | 3.3 s |
 | Health-Anfragen bis zur ersten Antwort | 15 |
 | Grenzwert | 15 s |
 
-* Gemessen ab Start des Testclients; der Client muss unmittelbar nach dem Koordinator-Prozess gestartet werden. Die Spring-Startzeit steht zusaetzlich in logs/coordinator.log ("Started CoordinatorApplication in ... seconds").
+* Der Koordinator misst die Zeit selbst (JVM-Start bis ApplicationReadyEvent) und meldet sie in /api/health als startupSeconds; der Zeitpunkt des Client-Starts spielt keine Rolle. Zum Vergleich: logs/coordinator.log ("Started CoordinatorApplication in ... seconds").
 
 ## status-latency
 

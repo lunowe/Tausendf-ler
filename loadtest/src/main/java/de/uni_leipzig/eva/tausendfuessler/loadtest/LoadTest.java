@@ -8,7 +8,6 @@ import de.uni_leipzig.eva.tausendfuessler.loadtest.scenario.StatusLatencyScenari
 import de.uni_leipzig.eva.tausendfuessler.loadtest.scenario.ThroughputScenario;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +33,6 @@ public final class LoadTest {
     private LoadTest() {}
 
     public static void main(String[] args) throws IOException {
-        Instant clientStart = Instant.now();
         Options options;
         List<Scenario> selected;
         try {
@@ -48,7 +46,7 @@ public final class LoadTest {
         }
 
         CoordinatorApi api = new CoordinatorApi(options.coordinator());
-        Scenario.Context context = new Scenario.Context(api, options, clientStart);
+        Scenario.Context context = new Scenario.Context(api, options);
         System.out.println("Tausendfuessler Lasttest gegen " + api.baseUrl()
                 + (options.runLabel().isBlank() ? "" : " (" + options.runLabel() + ")"));
 
