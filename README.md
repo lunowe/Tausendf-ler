@@ -161,6 +161,9 @@ aus dem Repo-Root.
 
    Die private Domain (z. B. `coordinator.railway.internal`) steht beim Koordinator unter *Networking →
    Private Networking*; der Bot spricht damit über Railways internes Netz und nie über das Internet.
+   **Wörtlich eintragen** (`http://coordinator.railway.internal:8080`) – eine Variablen-Referenz wie
+   `${{Coordinator.RAILWAY_PRIVATE_DOMAIN}}` wurde in der Praxis nicht aufgelöst („Bad authority"). Notfalls
+   tut es auch die Public Domain per `https://`.
 4. **Worker auf jedem Laptop** starten (JDK 21 reicht, `mvn -q package -DskipTests` einmal ausführen):
 
    ```bash
