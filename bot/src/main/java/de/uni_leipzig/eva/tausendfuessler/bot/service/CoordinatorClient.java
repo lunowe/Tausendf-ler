@@ -9,6 +9,7 @@ import de.uni_leipzig.eva.tausendfuessler.bot.dto.JobInfo;
 import de.uni_leipzig.eva.tausendfuessler.bot.dto.PageResult;
 import de.uni_leipzig.eva.tausendfuessler.bot.dto.SearchHit;
 import de.uni_leipzig.eva.tausendfuessler.bot.dto.Stats;
+import de.uni_leipzig.eva.tausendfuessler.bot.dto.WorkerInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -81,6 +82,12 @@ public class CoordinatorClient {
 
     public Stats getStats() {
         return call(() -> restTemplate.getForObject(baseUrl + "/api/stats", Stats.class));
+    }
+
+    /** Currently connected workers, oldest connection first. */
+    public List<WorkerInfo> listWorkers() {
+        WorkerInfo[] body = call(() -> restTemplate.getForObject(baseUrl + "/api/workers", WorkerInfo[].class));
+        return body == null ? List.of() : Arrays.asList(body);
     }
 
     /** Full-text search over all crawled pages, at most {@code limit} hits. */

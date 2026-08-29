@@ -26,7 +26,7 @@ Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze (aktuell: [docs/Skizze_v3.md]
 | `common` | Plain Java + Jackson | Socket-Protokoll (`Message`-Records) |
 | `coordinator` | Spring Boot Web + Data JPA | Nimmt Jobs per REST an, verteilt URLs an Worker, persistiert Ergebnisse |
 | `worker` | Plain Java (kein Spring) | Verbindet sich zum Koordinator, crawlt URL-Pakete parallel |
-| `bot` | Spring Boot + telegrambots | Telegram-Oberfläche: `/crawl`, `/list`, `/status`, `/pause`, `/resume`, `/abort`, `/search`, `/stats` |
+| `bot` | Spring Boot + telegrambots | Telegram-Oberfläche: `/crawl`, `/list`, `/status`, `/pause`, `/resume`, `/abort`, `/search`, `/stats`, `/workers` |
 | `frontend` | Next.js 16 + TypeScript + Tailwind | Optionaler Browser-Leitstand auf derselben REST-API (siehe [Frontend](#frontend)) |
 
 ## Voraussetzungen
@@ -51,6 +51,15 @@ java -jar bot/target/bot.jar
 
 Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
 
+## Bot
+
+Befehle: `/crawl <URL> [Tiefe] [Filter …]`, `/list`, `/status <Job-ID>`, `/pause`, `/resume`, `/abort`,
+`/search <Text>`, `/stats`, `/workers` (verbundene Worker mit Threads, URLs in Arbeit und Verbindungszeit), `/help`.
+
+* `API_KEY`: wird als `X-Api-Key` an den Koordinator geschickt; leer = kein Header (Koordinator ohne Key).
+* `TELEGRAM_ALLOWED_CHATS`: kommagetrennte Chat-IDs; nur diese dürfen den Bot benutzen, alle anderen bekommen
+  „⛔ Dieser Bot ist privat.“ Leer = öffentlich (Warnung im Log).
+
 ## Frontend
 
 Die Skizze nennt einen Browser-Client als mögliche Erweiterung – `frontend/` ist genau das: ein
@@ -64,13 +73,20 @@ npm install
 npm run dev            # http://localhost:3000, erwartet Koordinator auf :8080
 ```
 
-* Seiten: `/` (Statistiken, Formular „Neuer Crawl“, Auftragsliste, Refresh alle 2 s),
-  `/jobs/<id>` (Details, Pause/Fortsetzen/Abbrechen gemäß Zustandsautomat, Live-Stream mit
-  1-s-Polling auf `/results?afterSeq=…`, Abschlussbericht) und `/search` (Volltextsuche mit Debounce).
+* Seiten: `/` (Statistiken, **Worker-Tafel** mit allen verbundenen Workern – ID, Threads, URLs in
+  Arbeit, verbunden seit – Refresh alle 2 s über `GET /api/workers`, Formular „Neuer Crawl“,
+  Auftragsliste), `/jobs/<id>` (Details, Pause/Fortsetzen/Abbrechen gemäß Zustandsautomat,
+  Live-Stream mit 1-s-Polling auf `/results?afterSeq=…`, Abschlussbericht) und `/search`
+  (Volltextsuche mit Debounce).
 * Browser-Aufträge laufen unter `owner = 0`; Telegram nutzt die Chat-ID, beide Welten teilen sich
   denselben Koordinator und dieselbe Datenbank.
-* Konfiguration: `NEXT_PUBLIC_COORDINATOR_URL` (Standard `http://localhost:8080`), siehe
-  `frontend/.env.example`.
+* Konfiguration in `frontend/.env.local` (Vorlage `frontend/.env.example`):
+  `NEXT_PUBLIC_COORDINATOR_URL` (Standard `http://localhost:8080`) und `NEXT_PUBLIC_API_KEY`
+  (wird als `X-Api-Key` mitgeschickt; leer lassen, wenn der Koordinator ohne `API_KEY` läuft).
+  Antwortet der Koordinator mit `401`, zeigt das Frontend ein Banner „API-Key fehlt oder falsch“.
+* **Nur lokal betreiben**: `NEXT_PUBLIC_*`-Werte landen im Browser-Bundle, der API-Key wäre also
+  für jeden Besucher lesbar. Das Frontend ist ein Leitstand für den eigenen Rechner bzw. die
+  Demo im LAN, kein öffentlich gehosteter Dienst.
 * Der Koordinator muss die Origin erlauben: `tausendfuessler.cors-origins`
   (Standard `http://localhost:3000`, Umgebungsvariable `CORS_ORIGINS`).
 * Build/Checks: `npm run build` (inkl. TypeScript) und `npm run lint`.
