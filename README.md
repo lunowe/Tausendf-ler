@@ -55,5 +55,5 @@ Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
 - [x] Gemeinsames Protokoll, Multimodul-Build
 - [ ] Koordinator: Job-Verwaltung, Frontier/Dedup/Scheduler, TCP-Server, Worker-Recovery
 - [ ] Koordinator: REST-API, JPA-Persistenz, Suche, Stats, Cleanup
-- [ ] Worker: TCP-Client-Schleife, Pause/Resume/Abort
+- [x] Worker: TCP-Client-Schleife, Reconnect mit Backoff, Abort-Signal
 - [ ] Lasttest-Client für die nicht-funktionalen Anforderungen
