@@ -53,7 +53,9 @@ Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
 - [x] Worker: Crawl-Kern (Fetch, jsoup-Extraktion, Thread-Pool) – getestet
 - [x] Bot: Befehle, Registry, Live-Stream-Polling, REST-Client
 - [x] Gemeinsames Protokoll, Multimodul-Build
-- [ ] Koordinator: Job-Verwaltung, Frontier/Dedup/Scheduler, TCP-Server, Worker-Recovery
-- [ ] Koordinator: REST-API, JPA-Persistenz, Suche, Stats, Cleanup
-- [ ] Worker: TCP-Client-Schleife, Pause/Resume/Abort
+- [x] Koordinator: Job-Verwaltung, Frontier/Dedup/Scheduler, TCP-Server, Worker-Recovery
+- [x] Koordinator: REST-API, JPA-Persistenz, Suche, Stats, Cleanup
+- [x] Worker: TCP-Client-Schleife, Pause/Resume/Abort
+- [x] End-to-End-Test (`coordinator/.../EndToEndTest`: REST → Koordinator → 2 echte Worker → lokale Test-Site → H2)
+      und manueller Smoke-Test gegen Postgres inkl. Worker-Absturz während eines Jobs
 - [ ] Lasttest-Client für die nicht-funktionalen Anforderungen

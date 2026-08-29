@@ -47,6 +47,13 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- real worker for the end-to-end test (worker depends only on common, no cycle) -->
+        <dependency>
+            <groupId>de.uni_leipzig.eva</groupId>
+            <artifactId>tausendfuessler-worker</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

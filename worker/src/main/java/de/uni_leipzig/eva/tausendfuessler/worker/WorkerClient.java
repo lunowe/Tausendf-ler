@@ -26,6 +26,8 @@ public final class WorkerClient implements AutoCloseable {
     private static final long POLL_INTERVAL_MS = 200;
     private static final long MIN_BACKOFF_MS = 1_000;
     private static final long MAX_BACKOFF_MS = 10_000;
+    /** Safety net: ask again if the coordinator has not answered a REQUEST_WORK for this long. */
+    private static final long REQUEST_TIMEOUT_MS = 2_000;
 
     private final String host;
     private final int port;
@@ -99,9 +101,13 @@ public final class WorkerClient implements AutoCloseable {
 
     private void runSession(Session session) {
         while (running && session.active.get()) {
-            if (session.registered && System.currentTimeMillis() >= lastNoWorkUntil) {
+            long now = System.currentTimeMillis();
+            boolean requestOpen = session.requestSentAt != 0 && now - session.requestSentAt < REQUEST_TIMEOUT_MS;
+            if (session.registered && now >= lastNoWorkUntil && !requestOpen) {
                 int freeSlots = threads - session.inFlight.get();
                 if (freeSlots > 0) {
+                    // one open request at a time, otherwise every completion would fetch another whole package
+                    session.requestSentAt = now;
                     send(session, new Message.RequestWork(workerId, freeSlots));
                 }
             }
@@ -129,8 +135,14 @@ public final class WorkerClient implements AutoCloseable {
                 log.info("registered as {}", registered.workerId());
                 signalWakeup();
             }
-            case Message.WorkPackage workPackage -> submit(session, workPackage);
-            case Message.NoWork noWork -> lastNoWorkUntil = System.currentTimeMillis() + noWork.retryAfterMs();
+            case Message.WorkPackage workPackage -> {
+                session.requestSentAt = 0;
+                submit(session, workPackage);
+            }
+            case Message.NoWork noWork -> {
+                session.requestSentAt = 0;
+                lastNoWorkUntil = System.currentTimeMillis() + noWork.retryAfterMs();
+            }
             case Message.JobSignal signal -> updateJobControl(signal);
             case Message.Error error -> log.warn("coordinator reported error: {}", error.message());
             default -> log.warn("unexpected message from coordinator: {}", message);
@@ -230,6 +242,8 @@ public final class WorkerClient implements AutoCloseable {
         private final AtomicBoolean active = new AtomicBoolean(true);
         private final AtomicInteger inFlight = new AtomicInteger();
         private volatile boolean registered;
+        /** Epoch millis of the unanswered REQUEST_WORK, 0 if none is open. */
+        private volatile long requestSentAt;
 
         private Session(CoordinatorConnection connection) {
             this.connection = connection;
