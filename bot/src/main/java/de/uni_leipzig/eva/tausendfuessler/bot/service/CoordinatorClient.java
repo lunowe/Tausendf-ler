@@ -85,10 +85,12 @@ public class CoordinatorClient {
 
     /** Full-text search over all crawled pages, at most {@code limit} hits. */
     public List<SearchHit> search(String query, int limit) {
+        // template + expand: encodes '&', '+', '#' etc. inside the free-text query strictly
         URI uri = UriComponentsBuilder.fromUriString(baseUrl + "/api/search")
-                .queryParam("q", query)
+                .queryParam("q", "{q}")
                 .queryParam("limit", limit)
-                .build()
+                .encode()
+                .buildAndExpand(query)
                 .toUri();
         SearchHit[] body = call(() -> restTemplate.getForObject(uri, SearchHit[].class));
         return body == null ? List.of() : Arrays.asList(body);

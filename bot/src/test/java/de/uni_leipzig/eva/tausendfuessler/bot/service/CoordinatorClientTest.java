@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class CoordinatorClientTest {
 
@@ -38,5 +39,14 @@ class CoordinatorClientTest {
         assertThatThrownBy(() -> client.getJobDetail("x"))
                 .isInstanceOf(CoordinatorException.class)
                 .satisfies(e -> assertThat(e.getMessage()).isEqualTo("Not Found"));
+    }
+
+    @Test
+    void searchEncodesReservedCharactersInTheQuery() {
+        server.expect(requestTo("http://coordinator/api/search?q=Tom%20%26%20Jerry%20C%2B%2B&limit=10"))
+                .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        assertThat(client.search("Tom & Jerry C++", 10)).isEmpty();
+        server.verify();
     }
 }

@@ -22,7 +22,7 @@ Ergebnis: **erfuellt**
 
 | Kennzahl | Wert |
 |---|---|
-| Startzeit des Koordinators (JVM-Start bis ApplicationReady) | 3.3 s |
+| Startzeit des Koordinators (JVM-Start bis ApplicationReady) | 3.4 s |
 | Health-Anfragen bis zur ersten Antwort | 15 |
 | Grenzwert | 15 s |
 
@@ -120,7 +120,7 @@ Ergebnis: **erfuellt**
 
 Ergänzung zum generierten Teil (Lauf vom 2026-08-29, Koordinator frisch gestartet, Postgres 16 in Docker auf Port 5433).
 
-* **Startzeit** (`/tmp/coordinator.out` bzw. `logs/coordinator.log`): Spring meldet 2,78 s, der Testclient misst 3,3 s bis `/api/health` antwortet (Grenzwert 15 s).
+* **Startzeit** (`/tmp/coordinator.out` bzw. `logs/coordinator.log`): Spring meldet 3,05 s ("process running for 3.396"), `/api/health` liefert `startupSeconds` ≈ 3,4 s (Grenzwert 15 s).
   ```
   ... [main] d.u.e.t.c.socket.WorkerSocketServer : worker socket listening on port 9090
   ... [main] d.u.e.t.c.CoordinatorApplication    : Started CoordinatorApplication in 2.78 seconds (process running for 3.185)
