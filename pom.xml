@@ -16,6 +16,7 @@
         <module>worker</module>
         <module>coordinator</module>
         <module>bot</module>
+        <module>loadtest</module>
     </modules>
 
     <properties>

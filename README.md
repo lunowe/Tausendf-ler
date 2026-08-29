@@ -49,6 +49,31 @@ java -jar bot/target/bot.jar
 
 Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
 
+## Lasttest
+
+Das Modul `loadtest` ist der Testclient aus der Skizze (Plain Java, kein Spring). Es misst die
+nicht-funktionalen Anforderungen gegen einen laufenden Koordinator: Startzeit, Status-Latenz bei 20 Jobs,
+Anteil interner Fehler, Durchsatz mit 1 vs. 2 Workern, Live-Latenz der Ergebnisse und URL-Dedup. Dafür startet
+es selbst eine synthetische Website auf einem freien Port und – wo nötig – echte `WorkerClient`-Instanzen im
+eigenen Prozess.
+
+```bash
+mvn -q package -DskipTests
+java -jar coordinator/target/coordinator.jar          # Terminal 1 (Postgres läuft)
+java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.md --run-label "$(date -Iseconds)"
+```
+
+* **Keine externen Worker** verbinden – das Durchsatz-Szenario braucht die eigenen In-Prozess-Worker als
+  einzige Quelle und bricht ab, wenn es einen fremden Worker erkennt.
+* Für das Startup-Szenario den Client direkt nach dem Koordinator-Prozess starten (misst die Zeit bis
+  `/api/health` antwortet).
+* Optionen: `--coordinator http://localhost:8080`, `--worker-host localhost`, `--worker-port 9090`,
+  `--scenario all|startup|status-latency|error-ratio|throughput|live-latency|dedup`, `--seconds 60`
+  (Dauer des Fehlerquoten-Tests), `--pages 2000` (Größe der Durchsatz-Site), `--report <Pfad>`, `--run-label "…"`.
+* Der Report enthält je Szenario die Messwerte und verweist für die restlichen NFAs auf
+  `CrawlExecutorTest.handlesHighVolumeConcurrentCrawls` (Threadpool-Vollständigkeit) und die Thread-IDs in den
+  Logs von Worker und Koordinator (Mehrkernauslastung).
+
 ## Status
 
 - [x] Worker: Crawl-Kern (Fetch, jsoup-Extraktion, Thread-Pool) – getestet
