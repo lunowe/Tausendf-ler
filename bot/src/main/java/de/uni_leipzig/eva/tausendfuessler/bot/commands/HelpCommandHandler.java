@@ -16,6 +16,7 @@ public class HelpCommandHandler implements CommandHandler {
             /pause <Job-ID>                    – Auftrag pausieren
             /resume <Job-ID>                   – Auftrag fortsetzen
             /abort <Job-ID>                    – Auftrag abbrechen (Ergebnisse bleiben)
+            /search <Text>                     – Volltextsuche über alle gecrawlten Seiten
             /stats                             – Nutzungsstatistik
             /help                              – diese Hilfe
 

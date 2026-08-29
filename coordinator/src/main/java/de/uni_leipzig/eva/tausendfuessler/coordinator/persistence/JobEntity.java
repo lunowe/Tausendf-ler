@@ -39,6 +39,8 @@ public class JobEntity {
     private long pagesVisited;
     private long linksFound;
     private long errors;
+    /** Highest depth for which a page result has arrived; see JobRuntime#currentDepth. */
+    private int currentDepth;
 
     @Column(nullable = false)
     private Instant createdAt;
@@ -77,6 +79,8 @@ public class JobEntity {
     public void setLinksFound(long linksFound) { this.linksFound = linksFound; }
     public long getErrors() { return errors; }
     public void setErrors(long errors) { this.errors = errors; }
+    public int getCurrentDepth() { return currentDepth; }
+    public void setCurrentDepth(int currentDepth) { this.currentDepth = currentDepth; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getStartedAt() { return startedAt; }
     public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }

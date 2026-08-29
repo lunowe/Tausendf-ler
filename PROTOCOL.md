@@ -17,7 +17,7 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 |---|---|---|---|
 | `POST` | `/api/jobs` | `{url, maxDepth, filters[], owner}` | `{jobId, status, message}` |
 | `GET` | `/api/jobs?owner=<chatId>` | – | `[{jobId, url, status, pagesVisited, createdAt}]` |
-| `GET` | `/api/jobs/{id}` | – | `{jobId, url, maxDepth, status, pagesVisited, linksFound, errors, startedAt, finishedAt}` |
+| `GET` | `/api/jobs/{id}` | – | `{jobId, url, maxDepth, currentDepth, status, pagesVisited, linksFound, errors, startedAt, finishedAt}` |
 | `GET` | `/api/jobs/{id}/results?afterSeq=<n>` | – | `[{seq, url, title, textSnippet, depth, crawledAt}]` aufsteigend nach `seq` |
 | `POST` | `/api/jobs/{id}/pause` | – | 204 |
 | `POST` | `/api/jobs/{id}/resume` | – | 204 |
@@ -28,6 +28,7 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 
 * `status` ∈ `PENDING, RUNNING, PAUSED, COMPLETED, ABORTED, FAILED`
 * `owner` = Telegram-Chat-ID; `/list` zeigt nur eigene Jobs.
+* `currentDepth` = höchste Tiefe, für die bereits ein Seitenergebnis eingegangen ist (bleibt nach Job-Ende stehen).
 * `seq` ist eine pro Job streng monoton steigende Nummer. Der Bot pollt jede Sekunde mit dem
   zuletzt gesehenen `seq` – das ist der Live-Stream.
 * Fehler: `404` unbekannter Job, `409` ungültiger Zustandsübergang (z. B. Pause auf beendetem Job),

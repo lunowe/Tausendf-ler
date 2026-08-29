@@ -13,6 +13,10 @@ public class JobDetail {
     @JsonProperty("maxDepth")
     private int maxDepth;
 
+    /** Highest depth for which a page result has arrived. */
+    @JsonProperty("currentDepth")
+    private int currentDepth;
+
     @JsonProperty("status")
     private JobStatus status;
 
@@ -42,6 +46,9 @@ public class JobDetail {
 
     public int getMaxDepth() { return maxDepth; }
     public void setMaxDepth(int maxDepth) { this.maxDepth = maxDepth; }
+
+    public int getCurrentDepth() { return currentDepth; }
+    public void setCurrentDepth(int currentDepth) { this.currentDepth = currentDepth; }
 
     public JobStatus getStatus() { return status; }
     public void setStatus(JobStatus status) { this.status = status; }

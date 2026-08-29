@@ -51,6 +51,7 @@ public class ResultService {
                 return; // aborted while this result was waiting for the lock; the job row is already final
             }
             runtime.complete(result.url());
+            runtime.noteDepthReached(result.depth());
             if (result.error() == null) {
                 long seq = runtime.nextSeq();
                 Instant crawledAt = Instant.ofEpochMilli(result.crawledAtEpochMs());
@@ -70,6 +71,7 @@ public class ResultService {
                 job.setPagesVisited(runtime.pagesVisited());
                 job.setLinksFound(runtime.linksFound());
                 job.setErrors(runtime.errors());
+                job.setCurrentDepth(runtime.currentDepth());
                 if (runtime.isFinished()) {
                     job.setStatus(JobStatus.COMPLETED);
                     job.setFinishedAt(Instant.now());

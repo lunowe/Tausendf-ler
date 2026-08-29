@@ -45,6 +45,7 @@ class JobControllerTest {
         JsonNode detail = rest.getForEntity("/api/jobs/" + jobId, JsonNode.class).getBody();
         assertThat(detail.get("url").asText()).isEqualTo("https://api.example/start");
         assertThat(detail.get("maxDepth").asInt()).isEqualTo(2);
+        assertThat(detail.get("currentDepth").asInt()).isEqualTo(0);
         assertThat(detail.get("startedAt").asText()).contains("T");
         assertThat(detail.get("finishedAt").isNull()).isTrue();
 
