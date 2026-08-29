@@ -12,7 +12,10 @@ import java.util.UUID;
 public final class WorkerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(WorkerApplication.class);
-    static final String USAGE = "Usage: java -jar worker.jar --coordinator <host:port> [--threads <n>] [--id <name>]";
+    static final String USAGE = "Usage: java -jar worker.jar --coordinator <host:port> [--threads <n>] [--id <name>]"
+            + " [--token <WORKER_TOKEN>]";
+    /** Exit code when the coordinator rejects the worker token - no reconnect loop, the operator has to fix it. */
+    static final int EXIT_UNAUTHORIZED = 3;
 
     public static void main(String[] args) {
         var parsed = parseArgs(args);
@@ -37,10 +40,21 @@ public final class WorkerApplication {
         }
 
         var workerId = parsed.getOrDefault("--id", defaultWorkerId());
-        var client = new WorkerClient(address.host(), address.port(), workerId, threads);
+        var token = token(parsed.get("--token"), System.getenv("WORKER_TOKEN"));
+        var client = new WorkerClient(address.host(), address.port(), workerId, threads, token);
         Runtime.getRuntime().addShutdownHook(new Thread(client::close, "worker-shutdown"));
-        log.info("worker {} starting, coordinator={}:{} threads={}", workerId, address.host(), address.port(), threads);
+        log.info("worker {} starting, coordinator={}:{} threads={} token={}",
+                workerId, address.host(), address.port(), threads, token == null ? "none" : "set");
         client.run();
+        if (client.unauthorized()) {
+            System.exit(EXIT_UNAUTHORIZED);
+        }
+    }
+
+    /** {@code --token} wins over the environment; blank means "no token". */
+    static String token(String argument, String environment) {
+        String value = argument != null && !argument.isBlank() ? argument : environment;
+        return value == null || value.isBlank() ? null : value;
     }
 
     static CoordinatorAddress parseCoordinator(String value) {

@@ -33,27 +33,43 @@ public final class WorkerClient implements AutoCloseable {
     private final int port;
     private final String workerId;
     private final int threads;
+    /** Shared secret for REGISTER ({@code WORKER_TOKEN}); {@code null} if the coordinator runs without one. */
+    private final String token;
     private final CrawlExecutor executor;
     private final ConcurrentHashMap<String, Message.Signal> jobControl = new ConcurrentHashMap<>();
     private final Object wakeup = new Object();
 
     private volatile boolean running = true;
+    private volatile boolean unauthorized;
     private volatile long lastNoWorkUntil;
     private volatile Session currentSession;
 
     public WorkerClient(String host, int port, String workerId, int threads) {
-        this(host, port, workerId, threads, new CrawlExecutor(threads));
+        this(host, port, workerId, threads, null);
     }
 
-    WorkerClient(String host, int port, String workerId, int threads, CrawlExecutor executor) {
+    public WorkerClient(String host, int port, String workerId, int threads, String token) {
+        this(host, port, workerId, threads, token, new CrawlExecutor(threads));
+    }
+
+    WorkerClient(String host, int port, String workerId, int threads, String token, CrawlExecutor executor) {
         this.host = host;
         this.port = port;
         this.workerId = workerId;
         this.threads = threads;
+        this.token = token;
         this.executor = executor;
     }
 
-    /** Blocks until {@link #close()} is called and reconnects after connection failures. */
+    /** {@code true} once the coordinator rejected our token; {@link #run()} then returns instead of reconnecting. */
+    public boolean unauthorized() {
+        return unauthorized;
+    }
+
+    /**
+     * Blocks until {@link #close()} is called and reconnects after connection failures - except when the
+     * coordinator answered REGISTER with {@code ERROR unauthorized}: a wrong token will not fix itself by retrying.
+     */
     public void run() {
         long backoff = MIN_BACKOFF_MS;
         while (running) {
@@ -87,7 +103,7 @@ public final class WorkerClient implements AutoCloseable {
             var session = new Session(new CoordinatorConnection(socket));
             currentSession = session;
             lastNoWorkUntil = 0;
-            session.connection.send(new Message.Register(workerId, threads));
+            session.connection.send(new Message.Register(workerId, threads, token));
             var reader = new Thread(() -> readMessages(session), "coordinator-reader");
             reader.setDaemon(true);
             reader.start();
@@ -144,7 +160,16 @@ public final class WorkerClient implements AutoCloseable {
                 lastNoWorkUntil = System.currentTimeMillis() + noWork.retryAfterMs();
             }
             case Message.JobSignal signal -> updateJobControl(signal);
-            case Message.Error error -> log.warn("coordinator reported error: {}", error.message());
+            case Message.Error error -> {
+                if (!session.registered && "unauthorized".equals(error.message())) {
+                    log.error("coordinator {}:{} rejected worker {}: wrong or missing token (--token / WORKER_TOKEN) - giving up",
+                            host, port, workerId);
+                    unauthorized = true;
+                    close();
+                } else {
+                    log.warn("coordinator reported error: {}", error.message());
+                }
+            }
             default -> log.warn("unexpected message from coordinator: {}", message);
         }
     }

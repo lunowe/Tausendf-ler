@@ -115,8 +115,7 @@ public final class ErrorRatioScenario implements Scenario {
     /** A job that really finished (depth 0, one page) so that pause on it must answer 409. */
     private static String completedJob(Context context, SyntheticSite site) throws Exception {
         CoordinatorApi api = context.api();
-        try (InProcessWorkers ignored = InProcessWorkers.start(context.options().workerHost(),
-                context.options().workerPort(), "lt-errors", 1, 2)) {
+        try (InProcessWorkers ignored = InProcessWorkers.start(context.options(), "lt-errors", 1, 2)) {
             String jobId = api.createJobOrThrow(site.startUrl(), 0);
             api.awaitJob(jobId, CoordinatorApi::isCompleted, Duration.ofSeconds(60));
             return jobId;

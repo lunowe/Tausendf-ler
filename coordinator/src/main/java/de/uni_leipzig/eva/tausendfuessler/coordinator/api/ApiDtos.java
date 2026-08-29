@@ -1,6 +1,7 @@
 package de.uni_leipzig.eva.tausendfuessler.coordinator.api;
 
 import de.uni_leipzig.eva.tausendfuessler.coordinator.crawl.JobStatus;
+import de.uni_leipzig.eva.tausendfuessler.coordinator.crawl.WorkerSession;
 import de.uni_leipzig.eva.tausendfuessler.coordinator.persistence.JobEntity;
 import de.uni_leipzig.eva.tausendfuessler.coordinator.persistence.PageEntity;
 
@@ -41,6 +42,12 @@ public final class ApiDtos {
     public record SearchHit(String url, String title, String textSnippet, String jobId) {
         static SearchHit of(PageEntity p) {
             return new SearchHit(p.getUrl(), p.getTitle(), p.getTextSnippet(), p.getJobId());
+        }
+    }
+
+    public record WorkerInfo(String workerId, int threads, int inFlight, Instant connectedAt) {
+        static WorkerInfo of(WorkerSession s) {
+            return new WorkerInfo(s.workerId(), s.threads(), s.inFlight(), s.connectedAt());
         }
     }
 

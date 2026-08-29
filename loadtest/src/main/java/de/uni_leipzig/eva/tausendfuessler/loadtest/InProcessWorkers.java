@@ -14,11 +14,13 @@ public final class InProcessWorkers implements AutoCloseable {
     private final List<WorkerClient> clients = new ArrayList<>();
     private final List<Thread> threads = new ArrayList<>();
 
-    public static InProcessWorkers start(String host, int port, String idPrefix, int count, int threadsPerWorker) {
+    public static InProcessWorkers start(Options options, String idPrefix, int count, int threadsPerWorker) {
+        String host = options.workerHost();
+        int port = options.workerPort();
         InProcessWorkers workers = new InProcessWorkers();
         for (int i = 1; i <= count; i++) {
             String id = idPrefix + "-w" + i;
-            WorkerClient client = new WorkerClient(host, port, id, threadsPerWorker);
+            WorkerClient client = new WorkerClient(host, port, id, threadsPerWorker, options.workerToken());
             Thread thread = new Thread(client::run, id);
             thread.setDaemon(true);
             thread.start();

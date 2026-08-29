@@ -11,7 +11,8 @@ class ProtocolJsonTest {
     @Test
     void roundTripsEveryMessageType() {
         List<Message> samples = List.of(
-                new Message.Register("w1", 4),
+                new Message.Register("w1", 4, "secret"),
+                new Message.Register("w2", 4, null),
                 new Message.Registered("w1"),
                 new Message.RequestWork("w1", 3),
                 new Message.WorkPackage("job", 1, List.of("https://a", "https://b"), List.of()),

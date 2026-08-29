@@ -9,6 +9,7 @@ import de.uni_leipzig.eva.tausendfuessler.coordinator.crawl.JobStatus;
 import de.uni_leipzig.eva.tausendfuessler.coordinator.crawl.WorkerRegistry;
 import de.uni_leipzig.eva.tausendfuessler.coordinator.persistence.JobEntity;
 import de.uni_leipzig.eva.tausendfuessler.coordinator.service.JobService;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -93,7 +94,7 @@ class WorkerSocketServerTest {
     @Test
     void fullCrawlRoundTripOverSocketAndRest() throws Exception {
         try (FakeWorker w = new FakeWorker()) {
-            w.send(new Message.Register("w-roundtrip", 8));
+            w.send(new Message.Register("w-roundtrip", 8, null));
             assertThat(w.receive()).isEqualTo(new Message.Registered("w-roundtrip"));
 
             JobEntity job = jobService.createJob("https://roundtrip.example/", 1, List.of(), 42L);
@@ -154,7 +155,7 @@ class WorkerSocketServerTest {
         JobRuntime runtime = runtimes.get(job.getId()).orElseThrow();
 
         FakeWorker dying = new FakeWorker();
-        dying.send(new Message.Register("w-dying", 2));
+        dying.send(new Message.Register("w-dying", 2, null));
         dying.receive();
         dying.requestWorkFor("w-dying", job.getId());
         assertThat(runtime.inFlightCount()).isEqualTo(1);
@@ -167,7 +168,7 @@ class WorkerSocketServerTest {
         });
 
         try (FakeWorker fresh = new FakeWorker()) {
-            fresh.send(new Message.Register("w-fresh", 2));
+            fresh.send(new Message.Register("w-fresh", 2, null));
             fresh.receive();
             Message.WorkPackage again = fresh.requestWorkFor("w-fresh", job.getId());
             assertThat(again.urls()).containsExactly("https://crash.example");
@@ -181,7 +182,7 @@ class WorkerSocketServerTest {
     void failingResultYieldsErrorButKeepsConnectionAndRequeuesNothingElse() throws Exception {
         JobEntity job = jobService.createJob("https://toolong.example/", 1, List.of(), 8L);
         try (FakeWorker w = new FakeWorker()) {
-            w.send(new Message.Register("w-toolong", 2));
+            w.send(new Message.Register("w-toolong", 2, null));
             w.receive();
             Message.WorkPackage pkg = w.requestWorkFor("w-toolong", job.getId());
 
@@ -208,8 +209,61 @@ class WorkerSocketServerTest {
             w.out.flush();
             assertThat(w.receive()).isInstanceOf(Message.Error.class);
 
-            w.send(new Message.Register("w-late", 1));
+            w.send(new Message.Register("w-late", 1, null));
             assertThat(w.receive()).isEqualTo(new Message.Registered("w-late"));
+        }
+    }
+
+    /** Own Spring context with a configured worker token; the outer tests run without one. */
+    @Nested
+    @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+            properties = "tausendfuessler.worker-token=" + WithWorkerToken.TOKEN)
+    @ActiveProfiles("test")
+    class WithWorkerToken {
+
+        static final String TOKEN = "test-worker-token";
+
+        @Autowired WorkerSocketServer tokenServer;
+        @Autowired WorkerRegistry tokenWorkers;
+
+        private Socket connect() throws IOException {
+            Socket socket = new Socket("localhost", tokenServer.getPort());
+            socket.setSoTimeout(5000);
+            return socket;
+        }
+
+        private Message exchange(Socket socket, Message request) throws IOException {
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+            out.write(ProtocolJson.encode(request));
+            out.write('\n');
+            out.flush();
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            return ProtocolJson.decode(in.readLine());
+        }
+
+        @Test
+        void wrongOrMissingTokenIsRejectedAndSocketClosed() throws Exception {
+            try (Socket socket = connect()) {
+                assertThat(exchange(socket, new Message.Register("w-wrong", 2, "nope")))
+                        .isEqualTo(new Message.Error("unauthorized"));
+                assertThat(socket.getInputStream().read()).as("coordinator closes the socket").isEqualTo(-1);
+            }
+            try (Socket socket = connect()) {
+                assertThat(exchange(socket, new Message.Register("w-none", 2, null)))
+                        .isEqualTo(new Message.Error("unauthorized"));
+                assertThat(socket.getInputStream().read()).isEqualTo(-1);
+            }
+            assertThat(tokenWorkers.get("w-wrong")).isEmpty();
+            assertThat(tokenWorkers.get("w-none")).isEmpty();
+        }
+
+        @Test
+        void correctTokenRegisters() throws Exception {
+            try (Socket socket = connect()) {
+                assertThat(exchange(socket, new Message.Register("w-token", 2, TOKEN)))
+                        .isEqualTo(new Message.Registered("w-token"));
+                assertThat(tokenWorkers.get("w-token")).isPresent();
+            }
         }
     }
 }

@@ -33,9 +33,9 @@ class CoordinatorConnectionTest {
             reader.setDaemon(true);
             reader.start();
 
-            client.send(new Message.Register("worker-1", 3));
+            client.send(new Message.Register("worker-1", 3, null));
             assertThat(received.poll(1, TimeUnit.SECONDS))
-                    .isEqualTo(new Message.Register("worker-1", 3));
+                    .isEqualTo(new Message.Register("worker-1", 3, null));
 
             var reply = new ArrayBlockingQueue<Message>(1);
             var replyReader = new Thread(() -> {

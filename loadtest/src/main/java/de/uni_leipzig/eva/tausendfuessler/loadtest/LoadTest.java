@@ -45,7 +45,7 @@ public final class LoadTest {
             return;
         }
 
-        CoordinatorApi api = new CoordinatorApi(options.coordinator());
+        CoordinatorApi api = new CoordinatorApi(options.coordinator(), options.apiKey());
         Scenario.Context context = new Scenario.Context(api, options);
         System.out.println("Tausendfuessler Lasttest gegen " + api.baseUrl()
                 + (options.runLabel().isBlank() ? "" : " (" + options.runLabel() + ")"));
@@ -53,6 +53,11 @@ public final class LoadTest {
         boolean startsWithStartup = selected.get(0) instanceof StartupScenario;
         if (!startsWithStartup && api.health().status() != 200) {
             System.err.println("Koordinator " + api.baseUrl() + " antwortet nicht auf /api/health - laeuft er?");
+            System.exit(2);
+            return;
+        }
+        if (api.stats().status() == 401) {
+            System.err.println("Koordinator " + api.baseUrl() + " verlangt einen API-Key (--api-key oder API_KEY).");
             System.exit(2);
             return;
         }

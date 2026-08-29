@@ -29,15 +29,17 @@ final class WorkerConnectionHandler implements Runnable {
     static final int READ_TIMEOUT_MS = 60_000;
 
     private final Socket socket;
+    private final WorkerToken workerToken;
     private final WorkerRegistry workers;
     private final JobRuntimeRegistry jobs;
     private final Scheduler scheduler;
     private final ResultService resultService;
     private final Runnable onClose;
 
-    WorkerConnectionHandler(Socket socket, WorkerRegistry workers, JobRuntimeRegistry jobs,
+    WorkerConnectionHandler(Socket socket, WorkerToken workerToken, WorkerRegistry workers, JobRuntimeRegistry jobs,
                             Scheduler scheduler, ResultService resultService, Runnable onClose) {
         this.socket = socket;
+        this.workerToken = workerToken;
         this.workers = workers;
         this.jobs = jobs;
         this.scheduler = scheduler;
@@ -76,6 +78,12 @@ final class WorkerConnectionHandler implements Runnable {
 
                 if (session == null) {
                     if (message instanceof Message.Register register) {
+                        if (!workerToken.matches(register.token())) {
+                            log.warn("worker {} from {} rejected: wrong or missing token",
+                                    register.workerId(), socket.getRemoteSocketAddress());
+                            writeLine(out, new Message.Error("unauthorized"));
+                            return; // try-with-resources closes the socket; no session -> nothing to recover
+                        }
                         session = new WorkerSession(register.workerId(), register.threads(), out);
                         workers.register(session);
                         session.send(new Message.Registered(register.workerId()));

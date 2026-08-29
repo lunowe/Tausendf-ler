@@ -15,6 +15,9 @@ server:
 
 tausendfuessler:
   worker-port: ${COORDINATOR_WORKER_PORT:9090}
+  # Shared Secrets. Leer = keine Authentifizierung (lokale Entwicklung); wird beim Start als WARN geloggt.
+  api-key: ${API_KEY:}            # Header X-Api-Key fuer /api/** (Bot, Frontend, Lasttest)
+  worker-token: ${WORKER_TOKEN:}  # Feld token in REGISTER (Worker)
   # Erlaubte Origins des Browser-Frontends (frontend/), kommasepariert
   cors-origins: ${CORS_ORIGINS:http://localhost:3000}
   result-retention-days: ${RESULT_RETENTION_DAYS:30}

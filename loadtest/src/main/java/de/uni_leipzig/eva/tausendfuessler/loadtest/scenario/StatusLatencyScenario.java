@@ -39,8 +39,7 @@ public final class StatusLatencyScenario implements Scenario {
         CoordinatorApi api = context.api();
         List<String> jobIds = new ArrayList<>();
         try (SyntheticSite site = new SyntheticSite(SITE);
-             InProcessWorkers ignored = InProcessWorkers.start(context.options().workerHost(),
-                     context.options().workerPort(), "lt-status", 1, 4)) {
+             InProcessWorkers ignored = InProcessWorkers.start(context.options(), "lt-status", 1, 4)) {
             for (int i = 0; i < JOBS; i++) {
                 jobIds.add(api.createJobOrThrow(site.startUrl(), 2));
             }

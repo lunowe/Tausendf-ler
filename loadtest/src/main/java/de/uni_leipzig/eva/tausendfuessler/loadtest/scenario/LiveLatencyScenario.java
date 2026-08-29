@@ -40,8 +40,7 @@ public final class LiveLatencyScenario implements Scenario {
     public ScenarioResult run(Context context) throws Exception {
         CoordinatorApi api = context.api();
         try (SyntheticSite site = new SyntheticSite(SITE);
-             InProcessWorkers ignored = InProcessWorkers.start(context.options().workerHost(),
-                     context.options().workerPort(), "lt-live", 2, 4)) {
+             InProcessWorkers ignored = InProcessWorkers.start(context.options(), "lt-live", 2, 4)) {
             String jobId = api.createJobOrThrow(site.startUrl(), 3);
             System.out.println("  Job " + jobId + " laeuft, polle /results alle " + POLL_MS + " ms ...");
 

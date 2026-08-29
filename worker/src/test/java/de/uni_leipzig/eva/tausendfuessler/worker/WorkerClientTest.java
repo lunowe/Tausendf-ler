@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkerClientTest {
 
@@ -144,8 +145,43 @@ class WorkerClientTest {
         }
     }
 
+    @Test
+    @Timeout(10)
+    void unauthorizedRegistrationStopsTheClientWithoutReconnecting() throws Exception {
+        try (var server = new ServerSocket(0)) {
+            var coordinator = connectWorker(server);
+            try (coordinator) {
+                assertRegistration(coordinator);
+                coordinator.send(new Message.Error("unauthorized"));
+
+                clientThread.join(5_000);
+                assertThat(clientThread.isAlive()).as("run() returns instead of reconnecting").isFalse();
+                assertThat(client.unauthorized()).isTrue();
+
+                server.setSoTimeout(1_500);
+                assertThatThrownBy(server::accept).as("no reconnect attempt").isInstanceOf(SocketTimeoutException.class);
+            }
+        }
+    }
+
+    @Test
+    @Timeout(10)
+    void otherErrorsKeepTheSessionAlive() throws Exception {
+        try (var server = new ServerSocket(0)) {
+            var coordinator = connectWorker(server);
+            try (coordinator) {
+                assertRegistration(coordinator);
+                coordinator.send(new Message.Registered("worker-test"));
+                coordinator.send(new Message.Error("internal error: something"));
+                assertThat(coordinator.readUntil(Message.RequestWork.class, Duration.ofSeconds(2))).isNotNull();
+                assertThat(client.unauthorized()).isFalse();
+                assertThat(clientThread.isAlive()).isTrue();
+            }
+        }
+    }
+
     private FakeCoordinator connectWorker(ServerSocket server) throws IOException {
-        client = new WorkerClient("localhost", server.getLocalPort(), "worker-test", 2);
+        client = new WorkerClient("localhost", server.getLocalPort(), "worker-test", 2, "test-token");
         clientThread = new Thread(client::run, "worker-client-test");
         clientThread.setDaemon(true);
         clientThread.start();
@@ -157,6 +193,7 @@ class WorkerClientTest {
         assertThat(register).isNotNull();
         assertThat(register.workerId()).isEqualTo("worker-test");
         assertThat(register.threads()).isEqualTo(2);
+        assertThat(register.token()).isEqualTo("test-token");
     }
 
     private static final class FakeCoordinator implements AutoCloseable {

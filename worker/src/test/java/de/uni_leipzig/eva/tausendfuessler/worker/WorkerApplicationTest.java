@@ -24,6 +24,15 @@ class WorkerApplicationTest {
     }
 
     @Test
+    void tokenArgumentWinsOverEnvironmentAndBlankMeansNone() {
+        assertThat(WorkerApplication.token("arg", "env")).isEqualTo("arg");
+        assertThat(WorkerApplication.token(null, "env")).isEqualTo("env");
+        assertThat(WorkerApplication.token("", "env")).isEqualTo("env");
+        assertThat(WorkerApplication.token(null, "")).isNull();
+        assertThat(WorkerApplication.token(null, null)).isNull();
+    }
+
+    @Test
     void parsesEmptyArgs() {
         var map = WorkerApplication.parseArgs(new String[]{});
         assertThat(map).isEmpty();

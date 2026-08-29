@@ -78,8 +78,7 @@ public final class ThroughputScenario implements Scenario {
     private Run measure(Context context, SyntheticSite site, int workerCount) throws Exception {
         CoordinatorApi api = context.api();
         System.out.printf("  Lauf mit %d Worker(n) ...%n", workerCount);
-        try (InProcessWorkers ignored = InProcessWorkers.start(context.options().workerHost(),
-                context.options().workerPort(), "lt-throughput" + workerCount, workerCount, THREADS_PER_WORKER)) {
+        try (InProcessWorkers ignored = InProcessWorkers.start(context.options(), "lt-throughput" + workerCount, workerCount, THREADS_PER_WORKER)) {
             String jobId = api.createJobOrThrow(site.startUrl(), MAX_DEPTH);
             JsonNode detail = api.awaitJob(jobId, CoordinatorApi::isCompleted, JOB_TIMEOUT);
             long pages = detail.path("pagesVisited").asLong();

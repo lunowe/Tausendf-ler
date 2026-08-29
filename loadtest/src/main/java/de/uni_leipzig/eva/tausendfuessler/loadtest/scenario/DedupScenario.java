@@ -37,8 +37,7 @@ public final class DedupScenario implements Scenario {
     public ScenarioResult run(Context context) throws Exception {
         CoordinatorApi api = context.api();
         try (SyntheticSite site = new SyntheticSite(SITE);
-             InProcessWorkers ignored = InProcessWorkers.start(context.options().workerHost(),
-                     context.options().workerPort(), "lt-dedup", 2, 4)) {
+             InProcessWorkers ignored = InProcessWorkers.start(context.options(), "lt-dedup", 2, 4)) {
             String jobId = api.createJobOrThrow(site.startUrl(), 3);
             System.out.println("  Job " + jobId + " laeuft mit 2 Workern ...");
             JsonNode detail = api.awaitJob(jobId, CoordinatorApi::isCompleted, JOB_TIMEOUT);

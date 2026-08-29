@@ -25,8 +25,11 @@ public sealed interface Message {
 
     // ---- worker -> coordinator ----
 
-    /** First message after connect. {@code threads} = size of the worker's crawl thread pool. */
-    record Register(String workerId, int threads) implements Message {}
+    /**
+     * First message after connect. {@code threads} = size of the worker's crawl thread pool.
+     * {@code token} = shared secret ({@code WORKER_TOKEN}); may be {@code null} if the coordinator runs without one.
+     */
+    record Register(String workerId, int threads, String token) implements Message {}
 
     /** Worker asks for the next URL package; {@code capacity} = free slots in its pool. */
     record RequestWork(String workerId, int capacity) implements Message {}

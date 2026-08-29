@@ -34,12 +34,19 @@ public final class CoordinatorApi {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
 
     private final String baseUrl;
+    /** Sent as {@code X-Api-Key} on every request; {@code null} = coordinator without authentication. */
+    private final String apiKey;
     private final HttpClient http;
     private final ObjectMapper json = new ObjectMapper();
     private final List<Call> calls = Collections.synchronizedList(new ArrayList<>());
 
     public CoordinatorApi(String baseUrl) {
+        this(baseUrl, null);
+    }
+
+    public CoordinatorApi(String baseUrl, String apiKey) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        this.apiKey = apiKey;
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     }
 
@@ -113,6 +120,9 @@ public final class CoordinatorApi {
         int status;
         JsonNode body = null;
         String error = null;
+        if (apiKey != null) {
+            request.header("X-Api-Key", apiKey);
+        }
         try {
             HttpResponse<String> response = http.send(request.timeout(REQUEST_TIMEOUT).build(),
                     HttpResponse.BodyHandlers.ofString());

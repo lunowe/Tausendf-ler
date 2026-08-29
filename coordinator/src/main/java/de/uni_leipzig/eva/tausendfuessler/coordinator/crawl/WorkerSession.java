@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** One connected worker: its output stream (writes are serialized) and the number of URLs it still owes us. */
@@ -17,6 +18,7 @@ public final class WorkerSession {
     private final String workerId;
     private final int threads;
     private final Writer out;
+    private final Instant connectedAt = Instant.now();
     private final AtomicInteger inFlight = new AtomicInteger();
 
     public WorkerSession(String workerId, int threads, Writer out) {
@@ -38,6 +40,7 @@ public final class WorkerSession {
 
     public String workerId() { return workerId; }
     public int threads() { return threads; }
+    public Instant connectedAt() { return connectedAt; }
     public int inFlight() { return inFlight.get(); }
     public void addInFlight(int n) { inFlight.addAndGet(n); }
     public void completedOne() { inFlight.updateAndGet(v -> Math.max(0, v - 1)); }

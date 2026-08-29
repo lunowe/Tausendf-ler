@@ -28,6 +28,7 @@ public class WorkerSocketServer implements SmartLifecycle {
     private static final Logger log = LoggerFactory.getLogger(WorkerSocketServer.class);
 
     private final int configuredPort;
+    private final WorkerToken workerToken;
     private final WorkerRegistry workers;
     private final JobRuntimeRegistry jobs;
     private final Scheduler scheduler;
@@ -40,9 +41,11 @@ public class WorkerSocketServer implements SmartLifecycle {
     private volatile boolean running;
 
     public WorkerSocketServer(@Value("${tausendfuessler.worker-port:9090}") int configuredPort,
+                              @Value("${tausendfuessler.worker-token:}") String workerToken,
                               WorkerRegistry workers, JobRuntimeRegistry jobs,
                               Scheduler scheduler, ResultService resultService) {
         this.configuredPort = configuredPort;
+        this.workerToken = new WorkerToken(workerToken);
         this.workers = workers;
         this.jobs = jobs;
         this.scheduler = scheduler;
@@ -66,6 +69,9 @@ public class WorkerSocketServer implements SmartLifecycle {
         acceptThread.setDaemon(true);
         acceptThread.start();
         log.info("worker socket listening on port {}", getPort());
+        if (!workerToken.enabled()) {
+            log.warn("WORKER_TOKEN is not set - every worker may register");
+        }
     }
 
     private void acceptLoop() {
@@ -74,8 +80,8 @@ public class WorkerSocketServer implements SmartLifecycle {
                 Socket socket = serverSocket.accept();
                 openConnections.add(socket);
                 log.info("worker connection from {}", socket.getRemoteSocketAddress());
-                handlerPool.execute(new WorkerConnectionHandler(socket, workers, jobs, scheduler, resultService,
-                        () -> openConnections.remove(socket)));
+                handlerPool.execute(new WorkerConnectionHandler(socket, workerToken, workers, jobs, scheduler,
+                        resultService, () -> openConnections.remove(socket)));
             } catch (IOException e) {
                 if (running) {
                     log.warn("accept failed: {}", e.getMessage());

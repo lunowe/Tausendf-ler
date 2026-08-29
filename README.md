@@ -51,6 +51,10 @@ java -jar bot/target/bot.jar
 
 Tests: `mvn test` (Koordinator-Tests laufen gegen H2, kein Docker nötig).
 
+Lokal läuft alles ohne Secrets. Sobald `API_KEY` bzw. `WORKER_TOKEN` in `.env` gesetzt sind, verlangt der
+Koordinator den Header `X-Api-Key` auf `/api/**` (Bot, Frontend und Lasttest lesen `API_KEY` aus der Umgebung)
+und das Feld `token` in `REGISTER` (Worker: `--token <t>` oder `WORKER_TOKEN`), siehe [PROTOCOL.md](PROTOCOL.md).
+
 ## Frontend
 
 Die Skizze nennt einen Browser-Client als mögliche Erweiterung – `frontend/` ist genau das: ein
@@ -95,10 +99,77 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
   ApplicationReady, vom Koordinator selbst gemessen) – der Client kann jederzeit gestartet werden.
 * Optionen: `--coordinator http://localhost:8080`, `--worker-host localhost`, `--worker-port 9090`,
   `--scenario all|startup|status-latency|error-ratio|throughput|live-latency|dedup`, `--seconds 60`
-  (Dauer des Fehlerquoten-Tests), `--pages 2000` (Größe der Durchsatz-Site), `--report <Pfad>`, `--run-label "…"`.
+  (Dauer des Fehlerquoten-Tests), `--pages 2000` (Größe der Durchsatz-Site), `--report <Pfad>`, `--run-label "…"`,
+  `--api-key` / `--worker-token` (Standard: Umgebungsvariablen `API_KEY` / `WORKER_TOKEN`).
 * Der Report enthält je Szenario die Messwerte und verweist für die restlichen NFAs auf
   `CrawlExecutorTest.handlesHighVolumeConcurrentCrawls` (Threadpool-Vollständigkeit) und die Thread-IDs in den
   Logs von Worker und Koordinator (Mehrkernauslastung).
+
+## Deployment auf Railway
+
+Koordinator, Bot und Postgres laufen als drei Services in einem [Railway](https://railway.app)-Projekt; die
+Worker laufen weiterhin auf den Laptops und verbinden sich über Railways TCP-Proxy. Die Images entstehen aus
+`coordinator/Dockerfile` und `bot/Dockerfile` (Multi-Stage: Maven baut nur die nötigen Module, Runtime ist ein
+schlankes JRE-Image ohne Root). Lokal prüfen: `docker build -f coordinator/Dockerfile .` bzw. `docker build -f bot/Dockerfile .`
+aus dem Repo-Root.
+
+1. **Projekt anlegen** und darin einen **Postgres**-Service hinzufügen (Railway-Template). Railway stellt dessen
+   Verbindungsdaten als Variablen `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` bereit.
+2. **Koordinator-Service** aus dem GitHub-Repo anlegen. Unter *Settings → Build* den *Dockerfile Path* auf
+   `coordinator/Dockerfile` setzen (Root Directory bleibt `/`, das Dockerfile braucht das Root-`pom.xml`).
+   Variablen (*Variables → Raw Editor*), die DB-Werte als Railway-Referenzen auf den Postgres-Service:
+
+   ```
+   DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
+   DB_USER=${{Postgres.PGUSER}}
+   DB_PASSWORD=${{Postgres.PGPASSWORD}}
+   API_KEY=<zufälliges Secret, z. B. openssl rand -hex 24>
+   WORKER_TOKEN=<zweites zufälliges Secret>
+   COORDINATOR_WORKER_PORT=9090
+   CORS_ORIGINS=http://localhost:3000
+   ```
+
+   (`DATABASE_URL` von Railway hat das Format `postgres://user:pw@host:port/db`, das der JDBC-Treiber nicht
+   versteht – deshalb die drei Einzelwerte.) Unter *Settings → Networking* für den REST-Port 8080 eine
+   *Public Domain* erzeugen und zusätzlich einen **TCP Proxy auf Port 9090** anlegen; Railway zeigt dann
+   `<proxy-host>:<proxy-port>` an – das ist die Adresse für die Worker.
+3. **Bot-Service** aus demselben Repo anlegen, *Dockerfile Path* `bot/Dockerfile`, Variablen:
+
+   ```
+   TELEGRAM_BOT_TOKEN=<von @BotFather>
+   TELEGRAM_BOT_USERNAME=<Bot-Name>
+   COORDINATOR_BASE_URL=http://<private Domain des Koordinators>:8080
+   API_KEY=<derselbe Wert wie beim Koordinator>
+   TELEGRAM_ALLOWED_CHATS=<eigene Chat-IDs, kommasepariert; leer = alle>
+   ```
+
+   Die private Domain (z. B. `coordinator.railway.internal`) steht beim Koordinator unter *Networking →
+   Private Networking*; der Bot spricht damit über Railways internes Netz und nie über das Internet.
+4. **Worker auf jedem Laptop** starten (JDK 21 reicht, `mvn -q package -DskipTests` einmal ausführen):
+
+   ```bash
+   java -jar worker/target/worker.jar --coordinator <proxy-host>:<proxy-port> --token <WORKER_TOKEN>
+   ```
+
+   Ein falscher Token wird als ERROR geloggt und der Worker beendet sich mit Exit-Code 3 statt zu reconnecten.
+5. Prüfen: `curl https://<public domain>/api/health` (ohne Key), `curl -H "X-Api-Key: …" https://<public domain>/api/workers`
+   listet die verbundenen Laptops; im Telegram-Chat `/workers`.
+
+Das Frontend (`frontend/`) bleibt bewusst **lokal**: `npm run dev` mit `NEXT_PUBLIC_COORDINATOR_URL=https://<public domain>`
+und `NEXT_PUBLIC_API_KEY=<API_KEY>`. Es wird nicht deployt, weil `NEXT_PUBLIC_*`-Werte im Browser-Bundle landen und
+der API-Key damit öffentlich wäre.
+
+### Security (bewusst minimal)
+
+Prototyp-Niveau, in der Prüfung erklärbar, mehr nicht:
+
+* **Zwei Shared Secrets** statt Nutzerverwaltung: `API_KEY` schützt die REST-API (Header `X-Api-Key`, ein
+  Servlet-Filter mit konstantzeitigem Vergleich, kein Spring Security), `WORKER_TOKEN` schützt die
+  Worker-Registrierung (Feld `token` in `REGISTER`). Beide leer → Prüfung aus, WARN im Log – nur lokal.
+* **Worker-Verkehr ist Klartext-TCP.** Der Token und die Crawl-Ergebnisse laufen unverschlüsselt über Railways
+  TCP-Proxy; TLS auf dem Socket war nicht Teil des Umfangs. Die REST-API ist über Railways Public Domain per HTTPS
+  erreichbar, Bot ↔ Koordinator bleibt im privaten Netz.
+* **Frontend nur lokal**, siehe oben. `TELEGRAM_ALLOWED_CHATS` beschränkt den Bot auf bekannte Chats.
 
 ## Status
 

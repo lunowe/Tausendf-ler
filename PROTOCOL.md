@@ -24,8 +24,15 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 | `POST` | `/api/jobs/{id}/abort` | – | 204 |
 | `GET` | `/api/stats` | – | `{totalJobs, activeJobs, totalPagesCrawled, topDomains{domain: count}}` |
 | `GET` | `/api/search?q=<text>&limit=<n>` | – | `[{url, title, textSnippet, jobId}]` (Postgres-Volltextsuche) |
+| `GET` | `/api/workers` | – | `[{workerId, threads, inFlight, connectedAt}]` verbundene Worker, älteste Verbindung zuerst |
 | `GET` | `/api/health` | – | `{status: "UP", time, startupSeconds}` (JVM-Start bis ApplicationReady) |
 
+* **Authentifizierung**: Jeder Aufruf unter `/api/**` trägt den Header `X-Api-Key: <API_KEY>`
+  (Shared Secret aus der Umgebungsvariable `API_KEY` des Koordinators). Fehlt der Header oder ist der
+  Schlüssel falsch → `401 {error: "unauthorized"}`. Ausnahmen: `GET /api/health` (Monitoring) und
+  `OPTIONS` (CORS-Preflight). Ist `API_KEY` beim Koordinator leer, ist die Prüfung abgeschaltet
+  (lokale Entwicklung; wird beim Start als WARN geloggt). Implementierung: ein einzelner
+  Servlet-Filter (`coordinator/.../config/ApiKeyFilter`), kein Spring Security.
 * `status` ∈ `PENDING, RUNNING, PAUSED, COMPLETED, ABORTED, FAILED`
 * `owner` = Telegram-Chat-ID; `/list` zeigt nur eigene Jobs.
 * `currentDepth` = höchste Tiefe, für die bereits ein Seitenergebnis eingegangen ist (bleibt nach Job-Ende stehen).
@@ -35,8 +42,9 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
   `400` ungültige Eingabe. Body `{error: "..."}`.
 * **CORS**: Der Bot ruft die API serverseitig auf und braucht kein CORS. Für das Browser-Frontend
   (`frontend/`, Next.js) erlaubt der Koordinator `/api/**` für die Origins aus
-  `tausendfuessler.cors-origins` (Standard `http://localhost:3000`, Methoden `GET, POST, OPTIONS`) –
-  siehe `coordinator/.../config/WebCorsConfig`. Andere Origins bekommen `403` auf den Preflight.
+  `tausendfuessler.cors-origins` (Standard `http://localhost:3000`, Methoden `GET, POST, OPTIONS`,
+  Header `Content-Type, X-Api-Key`) – siehe `coordinator/.../config/WebCorsConfig`. Andere Origins
+  bekommen `403` auf den Preflight.
 
 ---
 
@@ -50,7 +58,7 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 
 | Richtung | `type` | Felder | Bedeutung |
 |---|---|---|---|
-| W → K | `REGISTER` | `workerId, threads` | Erste Nachricht nach Connect |
+| W → K | `REGISTER` | `workerId, threads, token` | Erste Nachricht nach Connect; `token` = Shared Secret `WORKER_TOKEN` (`null`, wenn der Koordinator keins verlangt) |
 | K → W | `REGISTERED` | `workerId` | Bestätigung |
 | W → K | `REQUEST_WORK` | `workerId, capacity` | Worker hat `capacity` freie Slots |
 | K → W | `WORK_PACKAGE` | `jobId, depth, urls[], filters[]` | URL-Paket; alle URLs haben dieselbe Tiefe |
@@ -63,8 +71,8 @@ Die Java-Typen der Socket-Nachrichten liegen in `common`
 
 ```
 Worker                                   Koordinator
-  │── REGISTER {w1, 8} ────────────────────▶│  registriert w1
-  │◀─ REGISTERED {w1} ──────────────────────│
+  │── REGISTER {w1, 8, token} ─────────────▶│  prüft token, registriert w1
+  │◀─ REGISTERED {w1} ──────────────────────│  (falsch: ERROR {unauthorized} + Socket zu)
   │── REQUEST_WORK {w1, 8} ────────────────▶│  Least-Work-First: w1 hat 0 offen
   │◀─ WORK_PACKAGE {job, 0, [urlA], []} ────│  markiert urlA als "in flight @ w1"
   │   (Thread-Pool crawlt)                  │
@@ -82,6 +90,11 @@ Worker                                   Koordinator
 
 ### Regeln
 
+* **Worker-Token**: Ist beim Koordinator `WORKER_TOKEN` gesetzt, muss `REGISTER.token` exakt
+  übereinstimmen (konstantzeitiger Vergleich). Sonst antwortet der Koordinator mit
+  `ERROR {message: "unauthorized"}` und schließt den Socket. Der Worker loggt das als ERROR und beendet
+  sich mit Exit-Code 3 – **kein** Reconnect, ein Tippfehler soll den Server nicht dauerhaft hämmern.
+  Leeres `WORKER_TOKEN` = jeder Worker wird angenommen (WARN im Log).
 * **Paketgröße**: Koordinator gibt höchstens `capacity` URLs, typischerweise `min(capacity, 2 × threads)`.
 * **Verteilung**: Least-Work-First – der Worker mit den wenigsten offenen (zugeteilt, noch nicht
   beantwortet) URLs bekommt das nächste Paket. Bei Gleichstand Round-Robin.
