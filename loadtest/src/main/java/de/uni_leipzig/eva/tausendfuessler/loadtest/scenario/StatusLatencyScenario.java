@@ -44,6 +44,9 @@ public final class StatusLatencyScenario implements Scenario {
             for (int i = 0; i < JOBS; i++) {
                 jobIds.add(api.createJobOrThrow(site.startUrl(), 2));
             }
+            // one uncounted request per job: the very first detail query on a freshly started coordinator takes
+            // ~0.5 s (Hibernate query plan, JIT) and would otherwise be the only outlier in the measurement
+            jobIds.forEach(api::job);
             System.out.printf("  %d Jobs angelegt, messe %d s lang Statusabfragen ...%n", JOBS, DURATION_MS / 1000);
 
             List<Long> latencies = new ArrayList<>();
@@ -75,7 +78,8 @@ public final class StatusLatencyScenario implements Scenario {
             numbers.put("Antworten != 200", String.valueOf(notOk));
             return new ScenarioResult(name(), nfa(), exceeded == 0 && notOk == 0, numbers, List.of(
                     "Site: " + SITE.pages() + " Seiten, " + SITE.delayMs() + " ms Verzoegerung, maxDepth 2; "
-                            + "waehrend der Messung crawlt ein In-Prozess-Worker mit 4 Threads."));
+                            + "waehrend der Messung crawlt ein In-Prozess-Worker mit 4 Threads. Vor der Messung wurde jeder "
+                            + "Job einmal ungezaehlt abgefragt (Aufwaermen des frisch gestarteten Koordinators)."));
         } finally {
             jobIds.forEach(api::abort);
         }

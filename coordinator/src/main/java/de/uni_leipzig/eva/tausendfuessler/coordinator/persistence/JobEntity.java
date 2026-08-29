@@ -39,7 +39,11 @@ public class JobEntity {
     private long pagesVisited;
     private long linksFound;
     private long errors;
-    /** Highest depth for which a page result has arrived; see JobRuntime#currentDepth. */
+    /**
+     * Highest depth for which a page result has arrived; see JobRuntime#currentDepth. The default lets
+     * {@code ddl-auto: update} add the column to databases that already contain jobs.
+     */
+    @Column(nullable = false, columnDefinition = "integer default 0")
     private int currentDepth;
 
     @Column(nullable = false)

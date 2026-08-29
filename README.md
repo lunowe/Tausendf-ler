@@ -84,4 +84,4 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
 - [x] Worker: TCP-Client-Schleife, Pause/Resume/Abort
 - [x] End-to-End-Test (`coordinator/.../EndToEndTest`: REST → Koordinator → 2 echte Worker → lokale Test-Site → H2)
       und manueller Smoke-Test gegen Postgres inkl. Worker-Absturz während eines Jobs
-- [ ] Lasttest-Client für die nicht-funktionalen Anforderungen
+- [x] Lasttest-Client für die nicht-funktionalen Anforderungen (`loadtest`, Ergebnisse in [docs/NFA-Report.md](docs/NFA-Report.md))

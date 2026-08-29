@@ -23,6 +23,12 @@ public final class ThroughputScenario implements Scenario {
     static final double MIN_GAIN_PERCENT = 60;
     private static final int THREADS_PER_WORKER = 4;
     private static final int MAX_DEPTH = 3;
+    private static final int LINKS_PER_PAGE = 8;
+    /**
+     * Simulated network latency per fetch. Without it the local site answers in < 1 ms and the single per-job
+     * result path in the coordinator (DB write per page) becomes the limit, so more workers cannot show anything.
+     */
+    private static final long FETCH_DELAY_MS = 100;
     private static final Duration JOB_TIMEOUT = Duration.ofMinutes(15);
     private static final Duration PROBE_WAIT = Duration.ofSeconds(3);
 
@@ -40,7 +46,7 @@ public final class ThroughputScenario implements Scenario {
 
     @Override
     public ScenarioResult run(Context context) throws Exception {
-        SyntheticSite.Config config = new SyntheticSite.Config(context.options().pages(), 6, 3, 0, 3);
+        SyntheticSite.Config config = new SyntheticSite.Config(context.options().pages(), LINKS_PER_PAGE, 3, FETCH_DELAY_MS, 3);
         try (SyntheticSite site = new SyntheticSite(config)) {
             String foreignWorker = detectForeignWorker(context.api(), site);
             if (foreignWorker != null) {
@@ -52,7 +58,7 @@ public final class ThroughputScenario implements Scenario {
             double gain = one.pagesPerSecond() == 0 ? 0 : (two.pagesPerSecond() - one.pagesPerSecond()) / one.pagesPerSecond() * 100;
 
             Map<String, String> numbers = new LinkedHashMap<>();
-            numbers.put("Site", config.pages() + " Seiten, maxDepth " + MAX_DEPTH + ", keine Verzoegerung");
+            numbers.put("Site", config.pages() + " Seiten, maxDepth " + MAX_DEPTH + ", " + FETCH_DELAY_MS + " ms Verzoegerung je Abruf");
             numbers.put("1 Worker: Seiten / Dauer", one.pages() + " / " + String.format("%.1f s", one.seconds()));
             numbers.put("1 Worker: Durchsatz", String.format("%.1f Seiten/s", one.pagesPerSecond()));
             numbers.put("2 Worker: Seiten / Dauer", two.pages() + " / " + String.format("%.1f s", two.seconds()));
