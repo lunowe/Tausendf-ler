@@ -16,7 +16,7 @@ Telegram-API ──HTTP──▶ Bot (Spring Boot, kein Web-Server)
           Worker 1    Worker 2    Worker n   (Plain Java, Thread-Pool = CPU-Kerne)
 ```
 
-Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze und Aufgabenstellung: [docs/](docs/).
+Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze (aktuell: [docs/Skizze_v3.md](docs/Skizze_v3.md)) und Aufgabenstellung: [docs/](docs/).
 
 ## Module
 
@@ -86,4 +86,5 @@ java -jar loadtest/target/loadtest.jar --scenario all --report docs/NFA-Report.m
       und manueller Smoke-Test gegen Postgres inkl. Worker-Absturz während eines Jobs
 - [x] Lasttest-Client für die nicht-funktionalen Anforderungen (`loadtest`, Ergebnisse in [docs/NFA-Report.md](docs/NFA-Report.md))
 - [x] Livetest über Telegram (2026-08-29): alle Befehle inkl. Live-Stream, Pause/Resume/Abort, Sitemap-Crawl mit 437 Seiten
-- [ ] Skizze auf finale Architektur aktualisieren, Präsentation
+- [x] Skizze auf finale Architektur aktualisiert ([docs/Skizze_v3.md](docs/Skizze_v3.md))
+- [ ] Präsentation
