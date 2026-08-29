@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tausendfuessler;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+tausendfuessler:
+  worker-port: 0
+
+logging:
+  file:
+    name: target/coordinator-test.log
