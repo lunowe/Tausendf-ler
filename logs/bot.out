@@ -1,0 +1,55 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.0)
+
+2026-08-29T20:31:22.010+02:00  INFO 53781 --- [tausendfuessler-bot] [           main] d.u.e.t.bot.TelegrambotApplication       : Starting TelegrambotApplication using Java 21.0.11 with PID 53781 (/Users/lunowe/Coding/Tausendf-ler/bot/target/bot.jar started by lunowe in /Users/lunowe/Coding/Tausendf-ler)
+2026-08-29T20:31:22.012+02:00  INFO 53781 --- [tausendfuessler-bot] [           main] d.u.e.t.bot.TelegrambotApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-08-29T20:31:22.526+02:00  WARN 53781 --- [tausendfuessler-bot] [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final org.telegram.telegrambots.bots.DefaultBotOptions org.telegram.telegrambots.bots.DefaultAbsSender.getOptions()] because it is marked as final, consider using interface-based JDK proxies instead.
+>>>>> Registrierte Befehle: [/status, /crawl, /list, /help, /search, /abort, /pause, /resume, /stats] <<<<<
+2026-08-29T20:31:22.670+02:00  INFO 53781 --- [tausendfuessler-bot] [           main] d.u.e.t.bot.TelegrambotApplication       : Started TelegrambotApplication in 0.938 seconds (process running for 1.281)
+2026-08-29T20:31:22.925+02:00  INFO 53781 --- [tausendfuessler-bot] [           main] d.u.e.t.bot.TelegrambotApplication       : Telegram bot @taussenfuesslerbot registered, long polling started
+2026-08-29T20:31:58.656+02:00  INFO 53781 --- [tausendfuessler-bot] [legram Executor] d.u.e.t.bot.service.ResultPoller         : chat 1128162840 subscribed to job 5e945a20-f79b-48a2-b281-006dbc6b45a3
+2026-08-29T20:31:59.890+02:00  INFO 53781 --- [tausendfuessler-bot] [   scheduling-1] d.u.e.t.bot.service.ResultPoller         : job 5e945a20-f79b-48a2-b281-006dbc6b45a3 seq 1..1 delivered, last crawled 285 ms ago
+2026-08-29T20:32:00.992+02:00  INFO 53781 --- [tausendfuessler-bot] [   scheduling-1] d.u.e.t.bot.service.ResultPoller         : job 5e945a20-f79b-48a2-b281-006dbc6b45a3 seq 2..2 delivered, last crawled 358 ms ago
+2026-08-29T20:32:01.116+02:00  INFO 53781 --- [tausendfuessler-bot] [   scheduling-1] d.u.e.t.bot.service.ResultPoller         : job 5e945a20-f79b-48a2-b281-006dbc6b45a3 unsubscribed
+2026-08-29T20:33:13.527+02:00  INFO 53781 --- [tausendfuessler-bot] [gram Connection] o.t.t.u.DefaultBotSession                : Read timed out
+
+java.net.SocketTimeoutException: Read timed out
+	at java.base/sun.nio.ch.NioSocketImpl.timedRead(NioSocketImpl.java:278) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:304) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:346) ~[na:na]
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:796) ~[na:na]
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:1099) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:489) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:483) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1460) ~[na:na]
+	at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:1066) ~[na:na]
+	at org.apache.http.impl.io.SessionInputBufferImpl.streamRead(SessionInputBufferImpl.java:137) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.io.SessionInputBufferImpl.fillBuffer(SessionInputBufferImpl.java:153) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.io.SessionInputBufferImpl.readLine(SessionInputBufferImpl.java:280) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:138) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.conn.DefaultHttpResponseParser.parseHead(DefaultHttpResponseParser.java:56) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.io.AbstractMessageParser.parse(AbstractMessageParser.java:259) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.DefaultBHttpClientConnection.receiveResponseHeader(DefaultBHttpClientConnection.java:163) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.conn.CPoolProxy.receiveResponseHeader(CPoolProxy.java:157) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.protocol.HttpRequestExecutor.doReceiveResponse(HttpRequestExecutor.java:273) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.protocol.HttpRequestExecutor.execute(HttpRequestExecutor.java:125) ~[httpcore-4.4.16.jar!/:4.4.16]
+	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:272) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83) ~[httpclient-4.5.13.jar!/:4.5.13]
+	at org.telegram.telegrambots.updatesreceivers.DefaultBotSession$ReaderThread.getUpdatesFromServer(DefaultBotSession.java:249) ~[telegrambots-6.8.0.jar!/:na]
+	at org.telegram.telegrambots.updatesreceivers.DefaultBotSession$ReaderThread.run(DefaultBotSession.java:188) ~[telegrambots-6.8.0.jar!/:na]
+
+2026-08-29T20:35:34.480+02:00  INFO 53781 --- [tausendfuessler-bot] [legram Executor] d.u.e.t.bot.service.ResultPoller         : chat 1128162840 subscribed to job d03e14df-8c1d-4954-a22e-fd1e684d1c69
+2026-08-29T20:35:36.065+02:00  INFO 53781 --- [tausendfuessler-bot] [   scheduling-1] d.u.e.t.bot.service.ResultPoller         : job d03e14df-8c1d-4954-a22e-fd1e684d1c69 seq 1..1 delivered, last crawled 836 ms ago
+2026-08-29T20:35:36.191+02:00  INFO 53781 --- [tausendfuessler-bot] [   scheduling-1] d.u.e.t.bot.service.ResultPoller         : job d03e14df-8c1d-4954-a22e-fd1e684d1c69 unsubscribed

@@ -1,0 +1,3 @@
+20:36:18.685 [main] INFO  d.u.e.t.worker.WorkerApplication - worker demo-w1 starting, coordinator=localhost:9090 threads=8
+20:36:18.808 [main] INFO  d.u.e.t.worker.WorkerClient - connected to coordinator localhost:9090 as demo-w1
+20:36:18.825 [coordinator-reader] INFO  d.u.e.t.worker.WorkerClient - registered as demo-w1

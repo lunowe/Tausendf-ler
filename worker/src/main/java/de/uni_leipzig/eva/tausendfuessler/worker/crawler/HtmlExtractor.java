@@ -28,8 +28,10 @@ public final class HtmlExtractor {
     }
 
     private List<String> extractLinks(Document doc, String baseUrl) {
-        return doc.select("a[href]").stream()
-                .map(e -> e.absUrl("href"))
+        // <a href> in HTML plus <loc> in XML sitemaps (sitemap.xml / sitemap index)
+        var hrefs = doc.select("a[href]").stream().map(e -> e.absUrl("href"));
+        var locs = doc.select("loc").stream().map(e -> e.text().strip());
+        return Stream.concat(hrefs, locs)
                 .filter(href -> !href.isBlank())
                 .distinct()
                 .flatMap(this::filterHttp)

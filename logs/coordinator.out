@@ -1,0 +1,60 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.0)
+
+2026-08-29T20:31:18.116+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] d.u.e.t.c.CoordinatorApplication         : Starting CoordinatorApplication using Java 21.0.11 with PID 53635 (/Users/lunowe/Coding/Tausendf-ler/coordinator/target/coordinator.jar started by lunowe in /Users/lunowe/Coding/Tausendf-ler)
+2026-08-29T20:31:18.118+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] d.u.e.t.c.CoordinatorApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-08-29T20:31:18.533+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-29T20:31:18.567+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 27 ms. Found 2 JPA repository interfaces.
+2026-08-29T20:31:18.902+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-08-29T20:31:18.911+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-29T20:31:18.911+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-08-29T20:31:18.928+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-08-29T20:31:18.928+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 782 ms
+2026-08-29T20:31:19.035+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-29T20:31:19.100+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.2.Final
+2026-08-29T20:31:19.129+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-08-29T20:31:19.341+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-29T20:31:19.359+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-29T20:31:19.500+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@37cfda1c
+2026-08-29T20:31:19.501+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-29T20:31:19.549+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.15
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-29T20:31:20.050+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-29T20:31:20.099+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-29T20:31:20.308+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-29T20:31:20.822+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-08-29T20:31:20.824+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] d.u.e.t.c.socket.WorkerSocketServer      : worker socket listening on port 9090
+2026-08-29T20:31:20.829+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] d.u.e.t.c.CoordinatorApplication         : Started CoordinatorApplication in 3.232 seconds (process running for 3.671)
+2026-08-29T20:31:20.894+02:00  INFO 53635 --- [tausendfuessler-coordinator] [           main] d.u.e.t.c.service.RetentionCleanup       : retention cleanup: deleted 0 jobs and 0 pages older than 30 days
+2026-08-29T20:31:21.318+02:00  INFO 53635 --- [tausendfuessler-coordinator] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-29T20:31:21.318+02:00  INFO 53635 --- [tausendfuessler-coordinator] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-29T20:31:21.319+02:00  INFO 53635 --- [tausendfuessler-coordinator] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-08-29T20:31:21.783+02:00  INFO 53635 --- [tausendfuessler-coordinator] [  worker-accept] d.u.e.t.c.socket.WorkerSocketServer      : worker connection from /127.0.0.1:56653
+2026-08-29T20:31:21.940+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : worker demo-w1 registered with 8 threads (1 workers online)
+2026-08-29T20:31:58.637+02:00  INFO 53635 --- [tausendfuessler-coordinator] [nio-8080-exec-5] d.u.e.t.coordinator.service.JobService   : job 5e945a20-f79b-48a2-b281-006dbc6b45a3 created by 1128162840: https://example.com (maxDepth=1, filters=[])
+2026-08-29T20:31:59.239+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.coordinator.crawl.Scheduler      : worker demo-w1 <- 1 urls of job 5e945a20-f79b-48a2-b281-006dbc6b45a3 depth 0 | in-flight per worker: demo-w1=1
+2026-08-29T20:31:59.619+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : PAGE_RESULT from demo-w1 for job 5e945a20-f79b-48a2-b281-006dbc6b45a3 (https://example.com) handled on thread 53
+2026-08-29T20:32:00.025+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.coordinator.crawl.Scheduler      : worker demo-w1 <- 1 urls of job 5e945a20-f79b-48a2-b281-006dbc6b45a3 depth 1 | in-flight per worker: demo-w1=1
+2026-08-29T20:32:00.634+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : PAGE_RESULT from demo-w1 for job 5e945a20-f79b-48a2-b281-006dbc6b45a3 (https://iana.org/domains/example) handled on thread 53
+2026-08-29T20:32:00.643+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.service.ResultService          : job 5e945a20-f79b-48a2-b281-006dbc6b45a3 completed: 2 pages, 2 links, 0 errors
+2026-08-29T20:35:34.476+02:00  INFO 53635 --- [tausendfuessler-coordinator] [nio-8080-exec-5] d.u.e.t.coordinator.service.JobService   : job d03e14df-8c1d-4954-a22e-fd1e684d1c69 created by 1128162840: https://www.versicherungsforen.net/sitemap.xml?page=1 (maxDepth=3, filters=[])
+2026-08-29T20:35:34.582+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.coordinator.crawl.Scheduler      : worker demo-w1 <- 1 urls of job d03e14df-8c1d-4954-a22e-fd1e684d1c69 depth 0 | in-flight per worker: demo-w1=1
+2026-08-29T20:35:35.230+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : PAGE_RESULT from demo-w1 for job d03e14df-8c1d-4954-a22e-fd1e684d1c69 (https://www.versicherungsforen.net/sitemap.xml?page=1) handled on thread 53
+2026-08-29T20:35:35.239+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.service.ResultService          : job d03e14df-8c1d-4954-a22e-fd1e684d1c69 completed: 1 pages, 0 links, 0 errors
+2026-08-29T20:36:17.268+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : worker demo-w1 disconnected (EOF)
+2026-08-29T20:36:17.270+02:00  WARN 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : worker demo-w1 removed from registry, 0 in-flight URL(s) requeued
+2026-08-29T20:36:18.693+02:00  INFO 53635 --- [tausendfuessler-coordinator] [  worker-accept] d.u.e.t.c.socket.WorkerSocketServer      : worker connection from /127.0.0.1:56918
+2026-08-29T20:36:18.808+02:00  INFO 53635 --- [tausendfuessler-coordinator] [ worker-handler] d.u.e.t.c.s.WorkerConnectionHandler      : worker demo-w1 registered with 8 threads (1 workers online)

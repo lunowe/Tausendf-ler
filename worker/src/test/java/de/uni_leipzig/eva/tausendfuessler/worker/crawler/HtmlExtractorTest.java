@@ -110,4 +110,17 @@ class HtmlExtractorTest {
         var result = extractor.extract("https://example.com", html);
         assertThat(result.plainText()).isNotBlank();
     }
+
+    @Test
+    void extractsLocEntriesFromSitemaps() {
+        var xml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                  <url><loc>https://example.com/a</loc></url>
+                  <url><loc>https://example.com/b</loc></url>
+                </urlset>
+                """;
+        var result = extractor.extract("https://example.com/sitemap.xml", xml);
+        assertThat(result.outgoingLinks()).containsExactly("https://example.com/a", "https://example.com/b");
+    }
 }
