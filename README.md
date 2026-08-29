@@ -147,7 +147,7 @@ aus dem Repo-Root.
    JDBC-Einstellungen – `config/DatabaseUrlEnvironmentPostProcessor`. Alternativ weiterhin `DB_URL`
    als JDBC-URL plus `DB_USER`/`DB_PASSWORD`; ist `DB_URL` gesetzt, hat es Vorrang – auch `DB_URL` darf die
    `postgres://`-Form haben.) Unter *Settings → Networking* für den REST-Port 8080 eine
-   *Public Domain* erzeugen und deren **Target Port auf 8080** stellen (sonst antwortet Railway mit „Application not found“; der Koordinator hört zusätzlich auf `PORT`, falls Railway es setzt) und zusätzlich einen **TCP Proxy auf Port 9090** anlegen; Railway zeigt dann
+   *Public Domain* erzeugen und deren **Target Port auf 8080** stellen (sonst antwortet Railway mit „Application not found“; Railways `PORT`-Variable wird bewusst ignoriert, weil sie mit dem TCP-Proxy auf 9090 kollidiert) und zusätzlich einen **TCP Proxy auf Port 9090** anlegen; Railway zeigt dann
    `<proxy-host>:<proxy-port>` an – das ist die Adresse für die Worker.
 3. **Bot-Service** aus demselben Repo anlegen, *Dockerfile Path* `bot/Dockerfile`, Variablen:
 
