@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+de.uni_leipzig.eva.tausendfuessler.coordinator.config.DatabaseUrlEnvironmentPostProcessor

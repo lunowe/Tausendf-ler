@@ -133,20 +133,19 @@ aus dem Repo-Root.
    Verbindungsdaten als Variablen `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` bereit.
 2. **Koordinator-Service** aus dem GitHub-Repo anlegen. Unter *Settings → Build* den *Dockerfile Path* auf
    `coordinator/Dockerfile` setzen (Root Directory bleibt `/`, das Dockerfile braucht das Root-`pom.xml`).
-   Variablen (*Variables → Raw Editor*), die DB-Werte als Railway-Referenzen auf den Postgres-Service:
+   Variablen (*Variables → Raw Editor*), die Datenbank als Railway-Referenz auf den Postgres-Service:
 
    ```
-   DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
-   DB_USER=${{Postgres.PGUSER}}
-   DB_PASSWORD=${{Postgres.PGPASSWORD}}
+   DATABASE_URL=${{Postgres.DATABASE_URL}}
    API_KEY=<zufälliges Secret, z. B. openssl rand -hex 24>
    WORKER_TOKEN=<zweites zufälliges Secret>
    COORDINATOR_WORKER_PORT=9090
    CORS_ORIGINS=http://localhost:3000
    ```
 
-   (`DATABASE_URL` von Railway hat das Format `postgres://user:pw@host:port/db`, das der JDBC-Treiber nicht
-   versteht – deshalb die drei Einzelwerte.) Unter *Settings → Networking* für den REST-Port 8080 eine
+   (`DATABASE_URL` im Format `postgres://user:pw@host:port/db` übersetzt der Koordinator selbst in die
+   JDBC-Einstellungen – `config/DatabaseUrlEnvironmentPostProcessor`. Alternativ weiterhin `DB_URL`
+   als JDBC-URL plus `DB_USER`/`DB_PASSWORD`; ist `DB_URL` gesetzt, hat es Vorrang.) Unter *Settings → Networking* für den REST-Port 8080 eine
    *Public Domain* erzeugen und zusätzlich einen **TCP Proxy auf Port 9090** anlegen; Railway zeigt dann
    `<proxy-host>:<proxy-port>` an – das ist die Adresse für die Worker.
 3. **Bot-Service** aus demselben Repo anlegen, *Dockerfile Path* `bot/Dockerfile`, Variablen:
