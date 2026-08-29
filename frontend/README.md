@@ -15,14 +15,21 @@ npm run dev     # http://localhost:3000
 ```
 
 Voraussetzung: Koordinator läuft (Standard `http://localhost:8080`) und erlaubt die Origin über
-`tausendfuessler.cors-origins`. Abweichende API-URL: `NEXT_PUBLIC_COORDINATOR_URL` in `.env.local`
-setzen (Vorlage: `.env.example`).
+`tausendfuessler.cors-origins`. Konfiguration in `.env.local` (Vorlage: `.env.example`):
+
+* `NEXT_PUBLIC_COORDINATOR_URL` – abweichende API-URL.
+* `NEXT_PUBLIC_API_KEY` – wird als `X-Api-Key` mitgeschickt, wenn der Koordinator mit `API_KEY`
+  läuft. Antwortet er mit `401`, erscheint unter der Kopfzeile ein Banner „API-Key fehlt oder
+  falsch – NEXT_PUBLIC_API_KEY setzen“ (`AuthBanner`, Zustand in `src/lib/authState.ts`).
+
+**Nur lokal betreiben.** `NEXT_PUBLIC_*`-Werte werden beim Build in das Browser-Bundle geschrieben;
+der API-Key wäre auf einem öffentlichen Host für jeden lesbar.
 
 ## Seiten
 
 | Route | Inhalt | API |
 |---|---|---|
-| `/` | Statistiken, Formular „Neuer Crawl“, Auftragsliste (Refresh alle 2 s) | `GET /api/stats`, `GET /api/jobs?owner=0`, `POST /api/jobs` |
+| `/` | Statistiken, Worker-Tafel (alle verbundenen Worker, Refresh alle 2 s), Formular „Neuer Crawl“, Auftragsliste | `GET /api/stats`, `GET /api/workers`, `GET /api/jobs?owner=0`, `POST /api/jobs` |
 | `/jobs/[id]` | Details, Steuerung, Live-Stream, Abschlussbericht | `GET /api/jobs/{id}`, `GET /api/jobs/{id}/results?afterSeq=…`, `POST …/pause\|resume\|abort` |
 | `/search` | Volltextsuche mit 300 ms Debounce | `GET /api/search?q=…&limit=…` |
 
@@ -32,7 +39,8 @@ setzen (Vorlage: `.env.example`).
 src/lib/api.ts          Typen + Fetch-Wrapper für die REST-API, ApiError mit HTTP-Status
 src/lib/usePolling.ts   Poll-Hook: nächster Tick erst nach dem vorigen, hält Daten bei Fehlern
 src/lib/format.ts       Zahlen-, Zeit- und URL-Formatierung (de-DE)
-src/components/         Kopf-/Fußzeile, UI-Primitive, Crawl-Formular, Live-Stream, Job-Ansicht
+src/lib/authState.ts    401-Flag für das Auth-Banner, ohne React (auch aus Server-Komponenten importierbar)
+src/components/         Kopf-/Fußzeile, Auth-Banner, UI-Primitive, Worker-Tafel, Crawl-Formular, Live-Stream, Job-Ansicht
 src/app/                Routen (App Router, alle Datenzugriffe clientseitig)
 ```
 

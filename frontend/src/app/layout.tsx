@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AuthBanner } from "@/components/AuthBanner";
 
 /** Eine Schriftfamilie in drei Stimmen: Serife fuer Titel, Sans fuer Fliesstext, Mono fuer Messwerte. */
 const display = IBM_Plex_Serif({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Zum Inhalt springen
         </a>
         <SiteHeader />
+        <AuthBanner />
         <main
           id="inhalt"
           className="mx-auto w-full max-w-[1160px] flex-1 px-4 pb-20 pt-8 sm:px-6 md:px-10 md:pt-10"

@@ -2,11 +2,22 @@
  * Thin client for the coordinator REST API (PROTOCOL.md section 1).
  * Everything runs in the browser, so the coordinator must allow this origin via
  * `tausendfuessler.cors-origins`.
+ *
+ * Authentication: when `NEXT_PUBLIC_API_KEY` is set, every request carries it as
+ * `X-Api-Key`. The key is inlined into the client bundle at build time, which is
+ * why this frontend is meant for local use only (see README).
  */
+
+import { setUnauthorized } from "@/lib/authState";
 
 export const COORDINATOR_URL = (
   process.env.NEXT_PUBLIC_COORDINATOR_URL ?? "http://localhost:8080"
 ).replace(/\/+$/, "");
+
+export const API_KEY = (process.env.NEXT_PUBLIC_API_KEY ?? "").trim();
+
+export const UNAUTHORIZED_MESSAGE =
+  "API-Key fehlt oder falsch – NEXT_PUBLIC_API_KEY setzen";
 
 /** Owner id used by the web frontend. The bot uses the Telegram chat id; 0 is reserved for the browser. */
 export const WEB_OWNER = 0;
@@ -80,6 +91,14 @@ export interface Health {
   startupSeconds?: number;
 }
 
+/** One connected worker (`GET /api/workers`), sorted by `connectedAt` on the server. */
+export interface WorkerInfo {
+  workerId: string;
+  threads: number;
+  inFlight: number;
+  connectedAt: string;
+}
+
 export interface CreateJobRequest {
   url: string;
   maxDepth: number;
@@ -105,18 +124,28 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (init?.body) headers["Content-Type"] = "application/json";
+  if (API_KEY) headers["X-Api-Key"] = API_KEY;
+
   let response: Response;
   try {
     response = await fetch(`${COORDINATOR_URL}${path}`, {
       ...init,
       cache: "no-store",
-      headers: init?.body
-        ? { "Content-Type": "application/json", ...init?.headers }
-        : init?.headers,
+      headers,
     });
   } catch {
     throw new ApiError(0, `Koordinator unter ${COORDINATOR_URL} nicht erreichbar`);
   }
+
+  if (response.status === 401) {
+    setUnauthorized(true);
+    throw new ApiError(401, UNAUTHORIZED_MESSAGE);
+  }
+  setUnauthorized(false);
 
   if (!response.ok) {
     throw new ApiError(response.status, await errorMessage(response));
@@ -141,6 +170,9 @@ export const api = {
   health: (signal?: AbortSignal) => request<Health>("/api/health", { signal }),
 
   stats: (signal?: AbortSignal) => request<Stats>("/api/stats", { signal }),
+
+  workers: (signal?: AbortSignal) =>
+    request<WorkerInfo[]>("/api/workers", { signal }),
 
   listJobs: (owner: number, signal?: AbortSignal) =>
     request<JobSummary[]>(`/api/jobs?owner=${owner}`, { signal }),

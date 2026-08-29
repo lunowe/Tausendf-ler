@@ -18,6 +18,7 @@ public class HelpCommandHandler implements CommandHandler {
             /abort <Job-ID>                    – Auftrag abbrechen (Ergebnisse bleiben)
             /search <Text>                     – Volltextsuche über alle gecrawlten Seiten
             /stats                             – Nutzungsstatistik
+            /workers                           – verbundene Worker
             /help                              – diese Hilfe
 
             Beispiel: /crawl https://example.com 2

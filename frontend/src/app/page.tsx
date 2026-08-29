@@ -5,6 +5,7 @@ import { api, WEB_OWNER, type JobSummary, type Stats } from "@/lib/api";
 import { usePolling } from "@/lib/usePolling";
 import { ago, host, num, padded, path } from "@/lib/format";
 import { NewCrawlForm } from "@/components/NewCrawlForm";
+import { WorkerPanel } from "@/components/WorkerPanel";
 import {
   Empty,
   ErrorNote,
@@ -39,7 +40,8 @@ export default function DashboardPage() {
         <p className="mt-4 max-w-[62ch] text-[0.9375rem] leading-relaxed text-[var(--ink-2)]">
           Dieselbe REST-Schnittstelle wie im Telegram-Bot – nur im Browser. Der
           Koordinator verteilt die URLs an die Worker, diese Seite fragt ihn alle{" "}
-          {REFRESH_MS / 1000} Sekunden nach dem aktuellen Stand.
+          {REFRESH_MS / 1000} Sekunden nach dem aktuellen Stand – auch danach,
+          welche Rechner gerade als Worker mitarbeiten.
         </p>
 
         <div className="mt-8 grid grid-cols-1 gap-px bg-[var(--rule)] sm:grid-cols-3">
@@ -74,20 +76,22 @@ export default function DashboardPage() {
         )}
       </section>
 
+      <WorkerPanel />
+
       <section className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7">
-          <SectionLabel index="01">Auftrag anlegen</SectionLabel>
+          <SectionLabel index="02">Auftrag anlegen</SectionLabel>
           <NewCrawlForm onCreated={jobs.refresh} />
         </div>
         <div className="lg:col-span-5">
-          <SectionLabel index="02">Meist gecrawlte Domains</SectionLabel>
+          <SectionLabel index="03">Meist gecrawlte Domains</SectionLabel>
           <TopDomains domains={stats.data?.topDomains ?? {}} />
         </div>
       </section>
 
       <section>
         <SectionLabel
-          index="03"
+          index="04"
           right={
             <span className="mono text-[0.625rem] text-[var(--ink-3)]">
               owner {WEB_OWNER} · Aktualisierung alle {REFRESH_MS / 1000} s
