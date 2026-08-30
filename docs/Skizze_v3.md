@@ -174,11 +174,3 @@ Pause/Resume/Abort (Ergebnisse bleiben erhalten) und ein Sitemap-Crawl mit 437 S
 | Least-Work-First ergibt sich aus dem Worker-Pull; Round-Robin nur über Aufträge | Worker fragen nur mit freier Kapazität; kein separater Warteschlangen-Zustand nötig. |
 | Absturzerkennung zusätzlich über 60-s-Read-Timeout; Koordinator-Neustart markiert offene Aufträge als FAILED | Geschlossene Sockets werden nicht immer sofort erkannt; die Frontier ist bewusst nur im Speicher (Prototyp-Umfang). |
 | Sitemap-`<loc>`-Einträge werden als Links extrahiert | Aus dem Livetest: `sitemap.xml` als Start-URL lieferte sonst keine Folge-URLs. |
-
-### Arbeitsaufteilung
-
-Drei Personen. Der Worker-Crawl-Kern (`PageFetcher`, `HtmlExtractor`, `CrawlExecutor`, Tests) stammt von
-Kanan Namazov; das Bot-Grundgerüst (Command-Registry, Handler, DTOs, erste Fassung von `CoordinatorClient` und
-`ResultPoller`) vom zweiten Teammitglied (Git-Autor „debian“). Koordinator, Socket-Protokoll, Integration der
-Module, End-to-End-Test, Lasttest-Modul und die Fehlerbehebungen in Worker und Bot wurden von Luca Wegner unter
-Einsatz von KI-Werkzeugen (Claude Code) entwickelt.

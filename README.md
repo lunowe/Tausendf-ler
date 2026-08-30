@@ -17,7 +17,7 @@ Browser ─────────────────┤ REST   (optionale
           Worker 1    Worker 2    Worker n   (Plain Java, Thread-Pool = CPU-Kerne)
 ```
 
-Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze (aktuell: [docs/Skizze_v3.md](docs/Skizze_v3.md)) und Aufgabenstellung: [docs/](docs/).
+Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze/Handout (aktuell: [docs/Skizze_v4.md](docs/Skizze_v4.md)) und Aufgabenstellung: [docs/](docs/).
 
 ## Module
 
@@ -202,6 +202,6 @@ Prototyp-Niveau, in der Prüfung erklärbar, mehr nicht:
       und manueller Smoke-Test gegen Postgres inkl. Worker-Absturz während eines Jobs
 - [x] Lasttest-Client für die nicht-funktionalen Anforderungen (`loadtest`, Ergebnisse in [docs/NFA-Report.md](docs/NFA-Report.md))
 - [x] Livetest über Telegram (2026-08-29): alle Befehle inkl. Live-Stream, Pause/Resume/Abort, Sitemap-Crawl mit 437 Seiten
-- [x] Skizze auf finale Architektur aktualisiert ([docs/Skizze_v3.md](docs/Skizze_v3.md))
+- [x] Skizze/Handout final (v4, [docs/Skizze_v4.md](docs/Skizze_v4.md); v3/v2 dokumentieren die Historie)
 - [x] Browser-Frontend (`frontend/`) auf derselben REST-API, gegen laufenden Koordinator + Worker getestet
 - [x] Präsentations-Baseline ([docs/presentation/Tausendfuessler.pptx](docs/presentation/Tausendfuessler.pptx), generiert aus `build_pptx.py`)
