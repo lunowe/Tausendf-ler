@@ -12,7 +12,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Component
-public class StatusCommandHandler {
+public class StatusCommandHandler implements CommandHandler {
 
     private final CoordinatorClient coordinatorClient;
 

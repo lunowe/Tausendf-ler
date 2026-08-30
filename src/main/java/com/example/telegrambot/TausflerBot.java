@@ -1,8 +1,6 @@
 package com.example.telegrambot;
 
 import com.example.telegrambot.commands.CommandHandler;
-import com.example.telegrambot.commands.CrawlCommandHandler;
-import com.example.telegrambot.commands.StatusCommandHandler;
 import com.example.telegrambot.config.CommandRegistry;
 import com.example.telegrambot.service.MessageSender;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +18,6 @@ public class TausflerBot extends TelegramLongPollingBot {
     private String username;
 
     private final CommandRegistry commandRegistry;
-    private final CrawlCommandHandler crawlHandler;
-    private final StatusCommandHandler statusHandler;
     private final MessageSender messageSender;
 
 
