@@ -17,8 +17,7 @@ Browser ─────────────────┤ REST   (optionale
           Worker 1    Worker 2    Worker n   (Plain Java, Thread-Pool = CPU-Kerne)
 ```
 
-Schnittstellen: [PROTOCOL.md](PROTOCOL.md). Skizze/Handout (aktuell: [docs/Skizze_v4.md](docs/Skizze_v4.md)) und Aufgabenstellung: [docs/](docs/).
-
+Skizze/Handout (aktuell: [docs/Skizze_v4.md](docs/Skizze_v4.md)).
 ## Module
 
 | Modul | Technologie | Aufgabe |
