@@ -55,7 +55,7 @@ Worker sind eigenständige Prozesse auf beliebigen Rechnern, die sich über das 
 
 ### Absicherung (minimal, wegen öffentlichem Betrieb)
 
-Security ist laut Modul als NFA ausgeklammert; da Koordinator und Bot aber öffentlich gehostet werden, wurde ein
+Security ist laut Modul als NFA ausgeklammert. Da Koordinator und Bot aber öffentlich gehostet werden, wurde ein
 bewusst minimales Schutzniveau ergänzt (jeweils ein Shared Secret, keine Nutzerverwaltung):
 
 * REST-API: Header `X-Api-Key` auf allen `/api/**`-Routen (außer `/api/health`); falscher/fehlender Key ⇒
