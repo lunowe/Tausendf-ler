@@ -31,8 +31,7 @@ Worker sind eigenständige Prozesse auf beliebigen Rechnern, die sich über das 
 * `/workers`: alle aktuell verbundenen Worker mit Thread-Zahl, URLs in Arbeit und Verbindungszeit – macht die
   Verteilung des Systems zur Laufzeit sichtbar (neu in v4).
 * Zusätzlich zum Bot existiert ein Browser-Frontend (Next.js) auf derselben REST-API: Dashboard mit Worker-Tafel
-  und Statistik, Auftrags-Detailseite mit Live-Stream und Steuerung, Volltextsuche (neu in v4; in v3 nur als
-  Möglichkeit genannt).
+  und Statistik, Auftrags-Detailseite mit Live-Stream und Steuerung, Volltextsuche.
 
 ### Systeminterne Abläufe (Koordinator & Worker)
 
