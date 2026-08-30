@@ -2,19 +2,16 @@
 
 Modul *Entwicklung verteilter Anwendungen*, Universität Leipzig, SS26. Dieses Dokument ist die über den
 Projektzeitraum fortgeschriebene Skizze (v1 → v4) und zugleich das Handout zur Präsentation. Es beschreibt die
-Architektur, wie sie im Repository umgesetzt und getestet ist; die Änderungshistorie steht am Ende.
-v4 arbeitet das Feedback zur NFA-Formulierung ein (Mehrkernauslastung als Performanz-, Deduplizierung als
-Skalierbarkeitseigenschaft) und ergänzt die seit v3 hinzugekommenen Punkte: Cloud-Betrieb, minimale Absicherung,
-Worker-Übersicht und Browser-Frontend.
+Architektur, wie sie im Repository umgesetzt und getestet ist.
 
 ## Beschreibung
 
 „Tausendfüßler“ ist ein verteilter Webcrawler, der über einen Telegram-Bot gesteuert wird. Der Bot-Prozess nimmt
 Crawl-Aufträge entgegen und reicht sie per REST an einen Koordinator weiter. Der Koordinator verteilt die zu
 besuchenden URLs über TCP-Sockets auf mehrere Worker-Prozesse, die parallel Webseiten herunterladen, parsen und ihre
-Ergebnisse zurückmelden. Aufträge und Seiten liegen in Postgres; der Bot holt neue Ergebnisse im Sekundentakt ab und
-liefert sie als Live-Stream in den Telegram-Chat. Koordinator, Bot und Datenbank laufen in der Cloud (Railway);
-Worker sind eigenständige Prozesse auf beliebigen Rechnern, die sich über das Internet verbinden – die Verteilung
+Ergebnisse zurückmelden. Aufträge und Seiten liegen in Postgres. Der Bot holt neue Ergebnisse im Sekundentakt ab und
+liefert sie als Live-Stream in den Telegram-Chat. Koordinator, Bot und Datenbank laufen in der Cloud (Railway).
+Worker sind eigenständige Prozesse auf beliebigen Rechnern, die sich über das Internet verbinden. Die Verteilung
 über Rechnergrenzen ist damit nicht nur theoretisch möglich, sondern der normale Betriebsmodus.
 
 ## Funktionale Anforderungen
@@ -80,7 +77,7 @@ bewusst minimales Schutzniveau ergänzt (jeweils ein Shared Secret, keine Nutzer
 ## Nicht-funktionale Anforderungen
 
 Annahme: die Messungen liefen mit Koordinator, Workern und Postgres auf einem handelsüblichen Laptop (mehrkernige
-CPU); im Regelbetrieb laufen Koordinator/Bot/Postgres in der Cloud und die Worker auf getrennten Rechnern.
+CPU). Im Regelbetrieb laufen Koordinator/Bot/Postgres in der Cloud und die Worker auf getrennten Rechnern.
 
 1. **Zuverlässigkeit** – Der Koordinator beantwortet Status- und Steueranfragen zu > 99,9 % ohne internen
    Fehler (5xx).
@@ -212,33 +209,6 @@ außerhalb des Auftrags-Locks).
 Ergänzend wurde das Gesamtsystem zweimal live getestet (2026-08-29): lokal über Telegram (alle Befehle inkl.
 Live-Stream, Pause/Resume/Abort, Sitemap-Crawl mit 437 Seiten) und anschließend in der Cloud-Topologie
 (Railway-Koordinator und -Bot, Laptop-Worker über TCP-Proxy, `example.com`-Crawl in 1,4 s Ende-zu-Ende).
-
-## Änderungshistorie
-
-### v3 → v4 (nach Feedback und Cloud-Betrieb)
-
-| Änderung | Grund |
-|---|---|
-| NFA 3 als Performanz-Eigenschaft formuliert (effiziente Ressourcennutzung bei hoher Auslastung) statt „Thread-Pool in Kerngröße“ | Feedback: die alte Fassung beschrieb eine technische Restriktion der Implementierung, nicht eine Eigenschaft des Systems; Überprüfung entsprechend nachgeschärft (Lastverteilung + Durchsatz-Skalierung statt bloßer Pool-Konfiguration). |
-| NFA 4 als Skalierbarkeits-/Robustheits-Eigenschaft formuliert (korrektes Verhalten bei n-fach konkurrierenden identischen URLs) statt „Dedup ist atomar“ | Feedback: die alte Fassung las sich als funktionale Anforderung; entscheidend ist, dass das System bei x parallelen Meldungen derselben URLs einwandfrei funktioniert – so wird es jetzt auch geprüft (1000 × 4 Schreibweisen × 8 Threads bzw. 18 076 konkurrierende Link-Funde). |
-| Neue NFA 10 „Zugriffsschutz (Minimum)“; Abschnitt „Absicherung“ ergänzt | Das System wird öffentlich gehostet; API-Key, Worker-Token und Chat-Allowlist sind das bewusst minimale Schutzniveau. Die generelle Security-Ausklammerung des Moduls bleibt bestehen und die Lücken (Klartext-TCP, Frontend nur lokal) sind benannt. |
-| Cloud-Betrieb auf Railway als Regelbetrieb dokumentiert (drei Services + TCP-Proxy; Worker auf beliebigen Rechnern) | Die Verteilung über Rechnergrenzen wird real demonstriert statt nur behauptet; live verifiziert am 2026-08-29. |
-| Neue FA `/workers` (Bot und Frontend-Tafel) | Macht die verbundenen Worker – und damit die Verteilung – zur Laufzeit sichtbar; zentrales Element der Demo. |
-| Browser-Frontend von „möglich“ zu „umgesetzt“ (Next.js, lokal) | Beleg, dass die REST-API tatsächlich client-neutral ist; zweite Oberfläche ohne neue Server-Logik. |
-
-### v2 → v3 (Konsolidierung auf die Implementierung)
-
-| Änderung | Grund |
-|---|---|
-| Bot ↔ Koordinator per REST statt TCP-Socket; Koordinator daher mit Spring Web MVC | Das Modul verlangt REST-Komponenten mit Spring Boot; der Bot ist eine dünne Oberfläche, die API ist auch für ein Browser-Frontend nutzbar. Die Socket-Anforderung erfüllt Koordinator ↔ Worker. |
-| Live-Stream per Polling (1 s, `seq`-Cursor) statt Server-Push | Bei REST die einfachste robuste Lösung; gemessene Verzögerung p95 0,5 s liegt deutlich unter 2 s. |
-| Persistenz in Postgres über JPA statt JSON-Dateien | Ermöglicht Suche, Statistiken und Retention per SQL; der Poll-Cursor `seq` ist eine Spalte. Neue Befehle `/search` und `/stats`. |
-| NFA „parallele Statistikberechnung aus JSON-Dateien“ ersetzt durch Korrektheit der Volltextsuche | Ohne JSON-Dateien gibt es keinen parallelen Datei-Parser mehr. Ein Latenzziel für `/search` wurde nicht gemessen und daher nicht formuliert. |
-| Dedup-Test über Hub-Site statt „1000 identische URLs injizieren“; Mehrkern-Nachweis über Thread-IDs | Worker melden im Protokoll nur echte Seitenergebnisse; die Hub-Site erzeugt die Mehrfachmeldung realistisch. |
-| Startzeit vom Koordinator selbst gemessen (`startupSeconds` in `/api/health`) | Eine externe Messung hing vom Startzeitpunkt des Testclients ab. |
-| Least-Work-First ergibt sich aus dem Worker-Pull; Round-Robin nur über Aufträge | Worker fragen nur mit freier Kapazität; kein separater Warteschlangen-Zustand nötig. |
-| Absturzerkennung zusätzlich über 60-s-Read-Timeout; Koordinator-Neustart markiert offene Aufträge als FAILED | Geschlossene Sockets werden nicht immer sofort erkannt; die Frontier ist bewusst nur im Speicher (Prototyp-Umfang). |
-| Sitemap-`<loc>`-Einträge werden als Links extrahiert | Aus dem Livetest: `sitemap.xml` als Start-URL lieferte sonst keine Folge-URLs. |
 
 ## Verbesserungspotenzial
 
