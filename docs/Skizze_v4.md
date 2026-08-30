@@ -84,14 +84,11 @@ CPU). Im Regelbetrieb laufen Koordinator/Bot/Postgres in der Cloud und die Worke
 3. **Performanz / Ressourceneffizienz** – Bei hoher Auslastung (mehr offene URLs als Verarbeitungs-Slots) nutzt
    das System die verfügbaren Rechenressourcen effizient: die anstehende Arbeit verteilt sich auf alle Threads des
    Worker-Pools und auf alle verbundenen Worker, kein Verarbeitungsstrang liegt brach, und zusätzliche Ressourcen
-   (Kerne, Worker) erhöhen den Durchsatz, statt ungenutzt zu bleiben. *(v4: umformuliert – die frühere Fassung
-   „Thread-Pool in Kerngröße“ beschrieb eine Implementierungsentscheidung, nicht die Systemeigenschaft.)*
+   (Kerne, Worker) erhöhen den Durchsatz, statt ungenutzt zu bleiben.
 4. **Skalierbarkeit / Robustheit unter konkurrierender Last** – Auch wenn viele gleichzeitige Meldungen dieselben
    URLs betreffen – etwa wenn mehrere Worker parallel Seiten verarbeiten, die zehntausendfach auf dieselben Ziele
    verlinken –, funktioniert das System einwandfrei: jede URL wird genau einmal gecrawlt und gespeichert, kein
-   Ergebnis geht verloren, und das Ergebnis ist unabhängig davon, wie viele Worker beteiligt sind. *(v4:
-   umformuliert – die frühere Fassung beschrieb die Deduplizierung als Funktion; gemeint ist das korrekte Verhalten
-   unter n-facher paralleler Last.)*
+   Ergebnis geht verloren, und das Ergebnis ist unabhängig davon, wie viele Worker beteiligt sind.
 5. **Performanz** – Live-Ergebnisse erreichen den Bot innerhalb von 2 s nach Abschluss des Seitenabrufs.
 6. **Skalierbarkeit** – Der Crawl-Durchsatz mit zwei Workern ist um mindestens 60 % höher als mit einem Worker
    (gleicher Auftrag).
