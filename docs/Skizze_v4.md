@@ -58,11 +58,11 @@ Worker sind eigenständige Prozesse auf beliebigen Rechnern, die sich über das 
 Security ist laut Modul als NFA ausgeklammert. Da Koordinator und Bot aber öffentlich gehostet werden, wurde ein
 bewusst minimales Schutzniveau ergänzt (jeweils ein Shared Secret, keine Nutzerverwaltung):
 
-* REST-API: Header `X-Api-Key` auf allen `/api/**`-Routen (außer `/api/health`); falscher/fehlender Key ⇒
-  `401 {error: "unauthorized"}`. Umsetzung als einzelner Servlet-Filter, bewusst kein Spring Security.
-* Worker: `REGISTER` trägt ein Token; stimmt es nicht, antwortet der Koordinator `ERROR unauthorized` und schließt
+* REST-API: Header `X-Api-Key` auf allen `/api/**`-Routen (außer `/api/health`). Falscher/fehlender Key ⇒
+  `401 {error: "unauthorized"}`.
+* Worker: `REGISTER` trägt ein Token. Stimmt es nicht, antwortet der Koordinator `ERROR unauthorized` und schließt
   den Socket, der Worker beendet sich ohne Reconnect (Exit-Code 3).
-* Bot: Allowlist erlaubter Telegram-Chat-IDs; fremde Chats erhalten nur „Dieser Bot ist privat“.
+* Bot: Allowlist erlaubter Telegram-Chat-IDs. Fremde Chats erhalten nur „Dieser Bot ist privat“.
 * Bekannte, akzeptierte Lücken (Prototyp): die TCP-Strecke ist unverschlüsselt (Token und Ergebnisse im Klartext),
   das Frontend läuft nur lokal, weil sein API-Key sonst im Browser-Bundle öffentlich wäre.
 
